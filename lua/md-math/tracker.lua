@@ -135,14 +135,7 @@ function M.add(bufnr, row, col, row_end, col_end)
     if not buffer then
         return nil
     end
-
-    -- TODO: Implement a cache that is not O(n)
-    -- for _, pos in pairs(buffer.positions) do
-    --     if pos[1] == row and pos[2] == col then
-    --         return pos
-    --     end
-    -- end
-    
+ 
     local offset = util.compute_offset(bufnr, row, col)
     if not offset then
         return nil

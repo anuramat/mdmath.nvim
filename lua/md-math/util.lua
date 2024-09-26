@@ -33,7 +33,6 @@ function M.compute_offset(bufnr, row, col)
         return nil
     end
 
-    -- TODO: This gives an error if row is out of bounds, should we fix it?
     local len = M.linewidth(bufnr, row)
 
     local col_offset = len < col and len or col
