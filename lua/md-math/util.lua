@@ -2,7 +2,7 @@ local nvim = require'md-math.nvim'
 
 local M = {}
 
-function M.new_class(name)
+function M.class(name)
     local class = {}
     class.__index = class
     class.__name = name
@@ -50,6 +50,10 @@ end
 function M.strwidth(str)
     -- TODO: Is nvim.strwidth() the same thing?
     return vim.fn.strdisplaywidth(str)
+end
+
+function M.linedisplaywidth(line)
+    return vim.fn.col({line, '$'})
 end
 
 return M

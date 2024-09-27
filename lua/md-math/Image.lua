@@ -19,8 +19,8 @@ local function kitty_send(params, payload)
     for k, v in pairs(params) do
         tbl[#tbl + 1] = tostring(k) .. '=' .. tostring(v)
     end
-    -- tbl[#tbl + 1] = 'q=2'
-    tbl[#tbl + 1] = 'q=1'
+    tbl[#tbl + 1] = 'q=2'
+    -- tbl[#tbl + 1] = 'q=1'
 
     params = table.concat(tbl, ',')
 
@@ -34,7 +34,7 @@ local function kitty_send(params, payload)
     stdout:write(message)
 end
 
-local Image = util.new_class('Image')
+local Image = util.class 'Image'
 
 function Image:__tostring()
     return string.format('<Image id=%d>', self.id)

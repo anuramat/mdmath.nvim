@@ -8,7 +8,7 @@ local Image = require'md-math.Image'
 local tracker = require'md-math.tracker'
 local terminfo = require'md-math.terminfo'
 
-local Equation = util.new_class('Equation')
+local Equation = util.class 'Equation'
 
 function Equation:__tostring()
     return '<Equation>'
@@ -51,10 +51,16 @@ function Equation:_create(res, err)
         local image = Image.new(height, width, filename)
         local texts = image:text()
         local color = image:color()
-        
+
+        -- Increase text width to match the original width
+        local padding_len = self.width > width and self.width - width or 0
+        local padding = (' '):rep(padding_len)
+
         local lines = {}
         for i, text in ipairs(texts) do
-            lines[i] = { text, self.lines[i]:len() }
+            local rtext = text .. padding
+
+            lines[i] = { rtext, self.lines[i]:len() }
         end
 
         vim.schedule(function()
@@ -152,6 +158,10 @@ function Equation:_init(bufnr, row, col, text)
         end
         self.lines = lines
         self.width = width
+    elseif util.linewidth(bufnr, row) == text:len() then
+        -- Treat single line equations as a special case
+        self.width = util.strwidth(text)
+        self.lines = { text }
     end
 
     self.bufnr = bufnr

@@ -6,7 +6,7 @@ local nvim = require'md-math.nvim'
 
 local ns = nvim.create_namespace('md-math-marks')
 
-local Mark = util.new_class('Mark')
+local Mark = util.class 'Mark'
 local buffers = {}
 
 function Mark:_init(bufnr, row, col, opts)
@@ -24,7 +24,7 @@ function Mark:_init(bufnr, row, col, opts)
             local length = line[2]
             table.insert(self.lengths, length)
         end
-        -- UU.notify('Lengths', vim.inspect(self.lengths))
+
     else
         self.num_lines = 1
         self.lengths = { opts.text[2] }
@@ -87,7 +87,7 @@ function Mark:set_visible(visible)
     self:_redraw()
 end
 
-local Buffer = util.new_class('Buffer')
+local Buffer = util.class 'Buffer'
 
 function Buffer:_init(bufnr)
     self.bufnr = bufnr
@@ -227,6 +227,7 @@ local function opts2extmark(opts)
                 virt_text_pos = 'overlay',
                 virt_text_hide = true,
                 ephemeral = true,
+                undo_restore = false,
             })
         end
         return extmarks, true
@@ -236,6 +237,7 @@ local function opts2extmark(opts)
             virt_text_pos = opts.text_pos,
             virt_text_hide = true,
             ephemeral = true,
+            undo_restore = false,
         }, false
     end
 end

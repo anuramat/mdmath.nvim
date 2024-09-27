@@ -15,7 +15,7 @@ end
 --FIXME: The JS processor should be bundled with the plugin
 local PROCESS_PATH = vim.fn.expand('~/mdmath-js/src/index.js')
 
-local Processor = util.new_class('Processor')
+local Processor = util.class 'Processor'
 
 function Processor:_assert(condition, ...)
     local message = table.concat(vim.iter({ ... }):flatten():totable())

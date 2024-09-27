@@ -7,7 +7,7 @@ local Equation = require'md-math.Equation'
 local M = {}
 local buffers = {}
 
-local Buffer = util.new_class('Buffer')
+local Buffer = util.class 'Buffer'
 local INTERVAL = 1000
 
 -- FIX: Temporary workaround before NeoVim 0.12
