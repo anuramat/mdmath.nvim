@@ -13,7 +13,7 @@ function M.size()
     return winsize
 end
 
-function M.cell_dimensions()
+function M.cell_size()
     local size = M.size()
 
     local width = size.xpixel / size.col

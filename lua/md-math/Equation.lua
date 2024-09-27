@@ -6,9 +6,7 @@ local util = require'md-math.util'
 local Processor = require'md-math.Processor'
 local Image = require'md-math.Image'
 local tracker = require'md-math.tracker'
-
--- FIXME: This should be configurable
-local MULTILINE_WIDTH = 30
+local terminfo = require'md-math.terminfo'
 
 local Equation = util.new_class('Equation')
 
@@ -33,27 +31,30 @@ function Equation:_create(res, err)
         return
     end
 
+    local filename = res.data
+
     -- Multiline equations
     if self.lines then
-        -- local height = #self.lines
-        -- local cell_width, cell_height = util.cell_dim()
+        local width
+        local height = #self.lines
+        do -- compute dynamic width
+            local cell_width, cell_height = terminfo.cell_size()
+            local iwidth, iheight = res.width, res.height
 
-        -- local image_cell_width = self.image_width / cell_width
-        -- local image_cell_height = self.image_height / cell_height
+            local icell_width = iwidth / cell_width
+            local icell_height = iheight / cell_height
 
-        -- local width = height * image_cell_width / image_cell_height
-        -- width = math.ceil(width)
-        -- UU.notify('width', {self.width, width})
+            width = math.ceil(height * icell_width / icell_height)
+            width = math.ceil(width)
+        end
 
-        local image = Image.new(#self.lines, self.width, res)
+        local image = Image.new(height, width, filename)
         local texts = image:text()
         local color = image:color()
-
+        
         local lines = {}
-        local teste = {}
         for i, text in ipairs(texts) do
             lines[i] = { text, self.lines[i]:len() }
-            teste[i] = self.lines[i]:len()
         end
 
         vim.schedule(function()
@@ -70,7 +71,7 @@ function Equation:_create(res, err)
             end
         end)
     else
-        local image = Image.new(1, self.width, res)
+        local image = Image.new(1, self.width, filename)
         local text = image:text()[1]
         local color = image:color()
 
@@ -145,7 +146,7 @@ function Equation:_init(bufnr, row, col, text)
             return false
         end
 
-        local width = MULTILINE_WIDTH
+        local width = 0
         for i, line in ipairs(lines) do
             width = math.max(width, util.strwidth(line))
         end
@@ -163,9 +164,6 @@ function Equation:_init(bufnr, row, col, text)
     self.text = text
     if not self.lines then
         self.width = util.strwidth(text)
-        -- if util.linewidth(bufnr, row) == text:len() then
-        --     self.width = math.max(self.width, MULTILINE_WIDTH)
-        -- end
     end
     self.created = false
     self.valid = true
@@ -173,8 +171,14 @@ function Equation:_init(bufnr, row, col, text)
     -- remove trailing '$'
     self.equation = text:gsub('^%$*(.-)%$*$', '%1')
 
+    local cell_width, cell_height = terminfo.cell_size()
+
+    -- dynamic width for multiline equations
+    local img_width = self.lines and 0 or (self.width * cell_width)
+    local img_height = (self.lines and #self.lines or 1) * cell_height
+
     local processor = Processor.from_bufnr(bufnr)
-    processor:request(self.equation, function(res, err)
+    processor:request(self.equation, img_width, img_height, function(res, err)
         if self.valid then
             self:_create(res, err)
         end
