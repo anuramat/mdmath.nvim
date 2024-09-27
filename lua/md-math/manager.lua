@@ -118,9 +118,9 @@ function Buffer:parse(start_row, end_row)
     local equations = {}
 
     local function process_equation(sr, sc, er, ec, text)
-        if sr ~= er then
-            return
-        end
+        -- if sr ~= er then
+        --     return
+        -- end
 
         -- FIXME: Iterating over all equations is not efficient, we can use a hash table
         local equation = nil
@@ -132,12 +132,12 @@ function Buffer:parse(start_row, end_row)
             end
         end
 
-        if not equation then
-            equation = Equation.new(bufnr, sr, sc, text, ec - sc)
+        equation = equation or Equation.new(bufnr, sr, sc, text)
+        if equation then
+            table.insert(equations, equation)
         end
-        table.insert(equations, equation)
     end
-    -- local counter = 0
+
     local function get_queries(tree)
         local root = tree:root()
 
@@ -145,8 +145,6 @@ function Buffer:parse(start_row, end_row)
             local sr, sc, er, ec = node:range()
             local value = ts.get_node_text(node, 0)
 
-            -- counter = counter + 1
-            -- UU.notify("Equation", {value, counter})
             process_equation(sr, sc, er, ec, value)
         end
     end

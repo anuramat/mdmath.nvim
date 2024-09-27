@@ -24,6 +24,7 @@ function Mark:_init(bufnr, row, col, opts)
             local length = line[2]
             table.insert(self.lengths, length)
         end
+        -- UU.notify('Lengths', vim.inspect(self.lengths))
     else
         self.num_lines = 1
         self.lengths = { opts.text[2] }

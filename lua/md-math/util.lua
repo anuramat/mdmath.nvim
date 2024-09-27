@@ -9,7 +9,9 @@ function M.new_class(name)
     class.new = function(...)
         local self = setmetatable({}, class)
         if self._init then
-            self:_init(...)
+            if self:_init(...) == false then
+                return nil
+            end
         end
         return self
     end
