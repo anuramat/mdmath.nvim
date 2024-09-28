@@ -31,22 +31,12 @@ function Equation:_create(res, err)
         return
     end
 
-    local filename = res.data
+    local filename = res
 
     -- Multiline equations
     if self.lines then
-        local width
+        local width = self.width
         local height = #self.lines
-        do -- compute dynamic width
-            local cell_width, cell_height = terminfo.cell_size()
-            local iwidth, iheight = res.width, res.height
-
-            local icell_width = iwidth / cell_width
-            local icell_height = iheight / cell_height
-
-            width = math.ceil(height * icell_width / icell_height)
-            width = math.ceil(width)
-        end
 
         local image = Image.new(height, width, filename)
         local texts = image:text()
@@ -184,7 +174,7 @@ function Equation:_init(bufnr, row, col, text)
     local cell_width, cell_height = terminfo.cell_size()
 
     -- dynamic width for multiline equations
-    local img_width = self.lines and 0 or (self.width * cell_width)
+    local img_width = self.lines and (self.width * cell_width) or (self.width * cell_width)
     local img_height = (self.lines and #self.lines or 1) * cell_height
 
     local processor = Processor.from_bufnr(bufnr)

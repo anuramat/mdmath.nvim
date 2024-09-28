@@ -41,7 +41,7 @@ local function err_message(...)
     end
 end
 
-function Processor:_on_data(identifier, data_type, width, height, data)
+function Processor:_on_data(identifier, data_type, data)
     local callback = self.callbacks[identifier]
     if not callback then
         return err_message('no callback for identifier: ', identifier)
@@ -49,7 +49,7 @@ function Processor:_on_data(identifier, data_type, width, height, data)
     self.callbacks[identifier] = nil
 
     if data_type == 'data' then
-        callback({ width = width, height = height, data = data })
+        callback(data)
     elseif data_type == 'error' then
         callback(nil, data)
     end
@@ -62,7 +62,6 @@ function Processor:request(data, width, height, callback)
     end
     self.callbacks[identifier] = callback
 
-    -- require'util'.notify(string.format('requesting %s: %s', identifier, data))
     local code, err = self.pipes[0]:write(string.format("%s:%d:%d:%d:%s", identifier, width, height, #data, data))
     self:_assert(not err, 'failed to request: ', err)
 end
@@ -73,17 +72,13 @@ function Processor:_listen()
     local states = {
             READING_IDENTIFIER = 0,
             READING_TYPE = 1,
-            READING_WIDTH = 2,
-            READING_HEIGHT = 3,
-            READING_LENGTH = 4,
-            READING_DATA = 5
+            READING_LENGTH = 2,
+            READING_DATA = 3
         }
         
         local state = states.READING_IDENTIFIER
         local identifier = ""
         local data_type = ""
-        local width = 0
-        local height = 0
         local length = 0
         local buffer = {}
     
@@ -100,26 +95,6 @@ function Processor:_listen()
                 if byte == separator then
                     data_type = table.concat(buffer)
                     self:_assert(data_type == "data" or data_type == "error", "Invalid data type: ", data_type)
-                    buffer = {}
-                    state = states.READING_WIDTH
-                else
-                    table.insert(buffer, string.char(byte))
-                end
-            elseif state == states.READING_WIDTH then
-                if byte == separator then
-                    local width_str = table.concat(buffer)
-                    width = tonumber(width_str)
-                    self:_assert(width, "Invalid width: ", width_str)
-                    buffer = {}
-                    state = states.READING_HEIGHT
-                else
-                    table.insert(buffer, string.char(byte))
-                end
-            elseif state == states.READING_HEIGHT then
-                if byte == separator then
-                    local height_str = table.concat(buffer)
-                    height = tonumber(height_str)
-                    self:_assert(height, "Invalid height: ", height_str)
                     buffer = {}
                     state = states.READING_LENGTH
                 else
@@ -138,7 +113,7 @@ function Processor:_listen()
             elseif state == states.READING_DATA then
                 table.insert(buffer, string.char(byte))
                 if #buffer == length then
-                    self:_on_data(identifier, data_type, width, height, table.concat(buffer))
+                    self:_on_data(identifier, data_type, table.concat(buffer))
                     state = states.READING_IDENTIFIER
                     buffer = {}
                 end
