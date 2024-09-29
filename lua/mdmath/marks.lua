@@ -1,10 +1,10 @@
 local vim = vim
-local util = require'md-math.util'
-local hl = require'md-math.highlight-colors'
-local tracker = require'md-math.tracker'
-local nvim = require'md-math.nvim'
+local util = require'mdmath.util'
+local hl = require'mdmath.highlight-colors'
+local tracker = require'mdmath.tracker'
+local nvim = require'mdmath.nvim'
 
-local ns = nvim.create_namespace('md-math-marks')
+local ns = nvim.create_namespace('mdmath-marks')
 
 local Mark = util.class 'Mark'
 local buffers = {}
@@ -264,7 +264,7 @@ function Mark:draw()
         if not ok then
             vim.schedule(function()
                 self:remove()
-                nvim.err_writeln('md-math: failed to draw mark: ' .. err)
+                nvim.err_writeln('mdmath: failed to draw mark: ' .. err)
             end)
         end
     end

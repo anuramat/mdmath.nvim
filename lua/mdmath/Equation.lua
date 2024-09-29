@@ -1,12 +1,12 @@
 local vim = vim
-local nvim = require'md-math.nvim'
+local nvim = require'mdmath.nvim'
 local uv = vim.loop
-local marks = require'md-math.marks'
-local util = require'md-math.util'
-local Processor = require'md-math.Processor'
-local Image = require'md-math.Image'
-local tracker = require'md-math.tracker'
-local terminfo = require'md-math.terminfo'
+local marks = require'mdmath.marks'
+local util = require'mdmath.util'
+local Processor = require'mdmath.Processor'
+local Image = require'mdmath.Image'
+local tracker = require'mdmath.tracker'
+local terminfo = require'mdmath.terminfo'
 
 local Equation = util.class 'Equation'
 

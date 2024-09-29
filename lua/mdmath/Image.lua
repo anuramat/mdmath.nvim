@@ -1,6 +1,6 @@
 local uv = vim.loop
-local util = require'md-math.util'
-local diacritics = require'md-math.Image.diacritics'
+local util = require'mdmath.util'
+local diacritics = require'mdmath.Image.diacritics'
 
 local stdout = uv.new_tty(1, false)
 if not stdout then

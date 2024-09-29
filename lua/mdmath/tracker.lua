@@ -1,5 +1,5 @@
-local nvim = require'md-math.nvim'
-local util = require'md-math.util'
+local nvim = require'mdmath.nvim'
+local util = require'mdmath.util'
 
 local buffers = {}
 

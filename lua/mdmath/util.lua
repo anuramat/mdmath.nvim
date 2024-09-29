@@ -1,4 +1,4 @@
-local nvim = require'md-math.nvim'
+local nvim = require'mdmath.nvim'
 
 local M = {}
 

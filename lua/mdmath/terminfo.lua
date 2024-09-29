@@ -4,7 +4,7 @@ local winsize = nil
 
 function M.size()
     if winsize == nil then
-        winsize, err = require'md-math.terminfo._system'.request_size()
+        winsize, err = require'mdmath.terminfo._system'.request_size()
         if not winsize then
             error('failed to get terminal size: code ' .. err)
         end

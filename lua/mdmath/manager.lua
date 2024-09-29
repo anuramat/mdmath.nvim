@@ -1,8 +1,8 @@
-local nvim = require'md-math.nvim'
-local util = require'md-math.util'
+local nvim = require'mdmath.nvim'
+local util = require'mdmath.util'
 local ts = vim.treesitter
 local uv = vim.uv
-local Equation = require'md-math.Equation'
+local Equation = require'mdmath.Equation'
 
 local M = {}
 local buffers = {}

@@ -1,7 +1,7 @@
 local vim = vim
 local api = vim.api
 local uv = vim.loop
-local util = require'md-math.util'
+local util = require'mdmath.util'
 
 local get_next_id
 do
