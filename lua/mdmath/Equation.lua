@@ -148,8 +148,6 @@ function Equation:invalidate()
         return
     end
 
-    -- UU.notify('Invalidating', self.text)
-
     self.pos:cancel()
     marks.remove(self.bufnr, self.mark_id)
     self.image:close()

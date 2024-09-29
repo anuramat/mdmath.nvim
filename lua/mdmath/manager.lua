@@ -118,10 +118,6 @@ function Buffer:parse(start_row, end_row)
     local equations = {}
 
     local function process_equation(sr, sc, er, ec, text)
-        -- if sr ~= er then
-        --     return
-        -- end
-
         -- FIXME: Iterating over all equations is not efficient, we can use a hash table
         local equation = nil
         for key, eq in ipairs(old_equations) do

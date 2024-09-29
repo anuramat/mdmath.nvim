@@ -164,7 +164,6 @@ function M.add(bufnr, row, col, row_end, col_end)
         cancel = cancel_pos,
     }
     table.insert(buffer.positions, pos)
-    -- UU.notify(nil, {'added_pos', pos.offset, pos.length}, 14152)
 
     return pos
 end

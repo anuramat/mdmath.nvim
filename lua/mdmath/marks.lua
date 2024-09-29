@@ -301,7 +301,6 @@ end
 do
     nvim.set_decoration_provider(ns, {
         on_win = function(_, _, bufnr)
-            -- UU.notify('on_win', bufnr)
             buffer = rawget(buffers, bufnr)
             if not buffer or not buffer._show then
                 return false
@@ -313,21 +312,6 @@ do
 
             return false
         end,
-        
-        -- on_line = function(_, _, bufnr, row)
-        --     buffer = rawget(buffers, bufnr)
-        --     if not buffer or not buffer._show then
-        --         return false
-        --     end
-
-        --     for _, self in pairs(buffer.marks) do
-        --         if self.pos[1] == row then
-        --             self:draw()
-        --         end
-        --     end
-
-        --     return false
-        -- end
     })
 end
 
