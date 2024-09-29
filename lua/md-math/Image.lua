@@ -8,19 +8,22 @@ if not stdout then
 end
 
 local _id = 1
-local function pop_id()
+local function next_id()
     local id = _id
     _id = _id + 1
     return id
 end
 
 local function kitty_send(params, payload)
+    if not params.q then
+        params.q = 1
+    end
+
     local tbl = {}
+
     for k, v in pairs(params) do
         tbl[#tbl + 1] = tostring(k) .. '=' .. tostring(v)
     end
-    -- tbl[#tbl + 1] = 'q=2'
-    tbl[#tbl + 1] = 'q=1'
 
     params = table.concat(tbl, ',')
 
@@ -41,7 +44,7 @@ function Image:__tostring()
 end
 
 function Image:_init(rows, cols, payload)
-    local id = pop_id()
+    local id = next_id()
     if self.id then
         self:close()
     end
@@ -58,7 +61,9 @@ function Image.unicode_at(row, col)
     return '\u{10EEEE}' .. diacritics[row] .. diacritics[col]
 end
 
+local teste_imagem
 function Image:text()
+    teste_imagem = self
     local text = {}
     for row = 1, self.rows do
         local T = {}
@@ -79,7 +84,7 @@ function Image:close()
         return
     end
 
-    -- TODO: close image
+    kitty_send({i = self.id, a = 'd', d = 'I'})
     self.id = nil
 end
 

@@ -87,53 +87,6 @@ function Equation:_create(res, err)
     end
 end
 
-local function get_size(filename, callback)
-    local stdout = uv.new_pipe(false)
-    local handle
-
-    -- Spawn the external program
-    handle = uv.spawn("/home/thiagomm/get-size", {
-        args = { filename },
-        stdio = {nil, stdout, nil}
-    }, function(code, signal)
-        -- Called when the process exits
-        uv.close(handle)  -- Ensure we close the handle after the process exits
-        if code ~= 0 then
-            callback(nil, "Process exited with code " .. code)
-        end
-    end)
-
-    -- Read the stdout data
-    local output = ""
-    uv.read_start(stdout, function(err, data)
-        if err then
-            callback(nil, err)
-            uv.read_stop(stdout)
-            uv.close(stdout)  -- Close stdout pipe on error
-        elseif data then
-            output = output .. data
-        else
-            -- No more data to read, process the output
-            uv.read_stop(stdout)
-            uv.close(stdout)  -- Close stdout pipe after reading
-
-            -- Parse the '<width>x<height>' format
-            local width, height = output:match("(%d+)x(%d+)")
-            if width and height then
-                callback({ width = tonumber(width), height = tonumber(height) })
-            else
-                callback(nil, "Failed to parse size")
-            end
-        end
-    end)
-
-    -- Ensure handle and stdout are closed if there's an error during spawning
-    if not handle then
-        uv.close(stdout)
-        callback(nil, "Failed to spawn process")
-    end
-end
-
 function Equation:_init(bufnr, row, col, text)
     if text:find('\n') then
         local lines = vim.split(text, '\n')
@@ -178,7 +131,7 @@ function Equation:_init(bufnr, row, col, text)
     local img_height = (self.lines and #self.lines or 1) * cell_height
 
     local processor = Processor.from_bufnr(bufnr)
-    processor:request(self.equation, img_width, img_height, function(res, err)
+    processor:request(self.equation, img_width, img_height, not self.lines, function(res, err)
         if self.valid then
             self:_create(res, err)
         end
@@ -199,6 +152,7 @@ function Equation:invalidate()
 
     self.pos:cancel()
     marks.remove(self.bufnr, self.mark_id)
+    self.image:close()
     self.mark_id = nil
 end
 

@@ -25,9 +25,6 @@ function Processor:_assert(condition, ...)
     end
 end
 
---- Concatenates and writes a list of strings to the Vim error buffer.
----
---- @param ... string List to write to the buffer
 local function err_message(...)
     local message = table.concat(vim.iter({ ... }):flatten():totable())
     if vim.in_fast_event() then
@@ -55,14 +52,24 @@ function Processor:_on_data(identifier, data_type, data)
     end
 end
 
-function Processor:request(data, width, height, callback)
+function Processor:setForeground(color)
+    if type(color) == 'number' then
+        color = string.format('#%06x', color)
+    end
+
+    local code, err = self.pipes[0]:write(string.format("0:fgcolor:%s", color))
+    self:_assert(not err, 'failed to set foreground: ', err)
+end
+
+function Processor:request(data, width, height, center, callback)
     local identifier = get_next_id()
     if self.callbacks[identifier] then
         return err_message('identifier already in use: ', identifier, ' (how the hell did this happen?)')
     end
     self.callbacks[identifier] = callback
 
-    local code, err = self.pipes[0]:write(string.format("%s:%d:%d:%d:%s", identifier, width, height, #data, data))
+    center = center and 'true' or 'false'
+    local code, err = self.pipes[0]:write(string.format("%s:request:%d:%d:%s:%d:%s", identifier, width, height, center, #data, data))
     self:_assert(not err, 'failed to request: ', err)
 end
 
@@ -162,8 +169,6 @@ function Processor:_init()
     end)
     self:_assert(self.handle, 'failed to spawn LatexProcessor: ', err)
 
-    self:_listen()
-
     self.err_buffer = {}
     local code, err = uv.read_start(self.pipes[2], function(err, data)
         if data then
@@ -171,6 +176,13 @@ function Processor:_init()
         end
     end)
     self:_assert(code == 0, 'failed to start reading from err pipe: ', err)
+
+    self:_listen()
+
+    -- TODO: Color should be configurable
+
+    local foreground = vim.api.nvim_get_hl(0, {name = 'Normal', create = false, link = false}).fg
+    self:setForeground(foreground)
 end
 
 function Processor:close()
