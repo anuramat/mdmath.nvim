@@ -56,4 +56,17 @@ function M.linedisplaywidth(line)
     return vim.fn.col({line, '$'})
 end
 
+function M.err_message(...)
+    local message = table.concat(vim.iter({ ... }):flatten():totable())
+    if vim.in_fast_event() then
+        vim.schedule(function()
+            api.nvim_err_writeln(message)
+            api.nvim_command('redraw')
+        end)
+    else
+        api.nvim_err_writeln(message)
+        api.nvim_command('redraw')
+    end
+end
+
 return M

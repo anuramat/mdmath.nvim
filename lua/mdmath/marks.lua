@@ -8,6 +8,7 @@ local ns = nvim.create_namespace('mdmath-marks')
 
 local Mark = util.class 'Mark'
 local buffers = {}
+local num_buffers = 0
 
 function Mark:_init(bufnr, row, col, opts)
     self.bufnr = bufnr
@@ -153,7 +154,10 @@ end
 do
     local function on_delete(opts)
         local bufnr = opts.buf
-        buffers[bufnr] = nil
+        if rawget(buffers, bufnr) ~= nil then
+            buffers[bufnr] = nil
+            num_buffers = num_buffers - 1
+        end
     end
 
     local function on_cursor(opts)
@@ -212,8 +216,9 @@ do
 
             local buf = Buffer.new(bufnr)
             buffers[bufnr] = buf
+            num_buffers = num_buffers + 1
             return buf
-        end
+        end,
     })
 end
 
@@ -300,6 +305,11 @@ end
 
 do
     nvim.set_decoration_provider(ns, {
+        on_start = function()
+            if buffers.refs == 0 then
+                return false
+            end
+        end,
         on_win = function(_, _, bufnr)
             buffer = rawget(buffers, bufnr)
             if not buffer or not buffer._show then

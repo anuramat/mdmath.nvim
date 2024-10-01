@@ -25,23 +25,10 @@ function Processor:_assert(condition, ...)
     end
 end
 
-local function err_message(...)
-    local message = table.concat(vim.iter({ ... }):flatten():totable())
-    if vim.in_fast_event() then
-        vim.schedule(function()
-            api.nvim_err_writeln(message)
-            api.nvim_command('redraw')
-        end)
-    else
-        api.nvim_err_writeln(message)
-        api.nvim_command('redraw')
-    end
-end
-
 function Processor:_on_data(identifier, data_type, data)
     local callback = self.callbacks[identifier]
     if not callback then
-        return err_message('no callback for identifier: ', identifier)
+        return util.err_message('no callback for identifier: ', identifier)
     end
     self.callbacks[identifier] = nil
 
@@ -64,7 +51,7 @@ end
 function Processor:request(data, width, height, center, callback)
     local identifier = get_next_id()
     if self.callbacks[identifier] then
-        return err_message('identifier already in use: ', identifier, ' (how the hell did this happen?)')
+        return util.err_message('identifier already in use: ', identifier, ' (how the hell did this happen?)')
     end
     self.callbacks[identifier] = callback
 
