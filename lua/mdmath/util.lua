@@ -60,13 +60,26 @@ function M.err_message(...)
     local message = table.concat(vim.iter({ ... }):flatten():totable())
     if vim.in_fast_event() then
         vim.schedule(function()
-            api.nvim_err_writeln(message)
-            api.nvim_command('redraw')
+            nvim.err_writeln(message)
+            nvim.command('redraw')
         end)
     else
-        api.nvim_err_writeln(message)
-        api.nvim_command('redraw')
+        nvim.err_writeln(message)
+        nvim.command('redraw')
     end
+end
+
+function M.is_hex_color(color)
+    return color:match('^#%x%x%x%x%x%x$') ~= nil
+end
+
+function M.hl_as_hex(color)
+    if M.is_hex_color(color) then
+        return color:lower()
+    end
+
+    local foreground = nvim.get_hl(0, {name = color, create = false, link = false}).fg 
+    return string.format('#%06x', foreground)
 end
 
 return M

@@ -3,6 +3,7 @@ local util = require'mdmath.util'
 local hl = require'mdmath.highlight-colors'
 local tracker = require'mdmath.tracker'
 local nvim = require'mdmath.nvim'
+local config = require'mdmath.config'
 
 local ns = nvim.create_namespace('mdmath-marks')
 
@@ -161,10 +162,9 @@ do
     end
 
     local function on_cursor(opts)
-        if vim.g.md_math_no_hide_marks then
+        if not config.anticonceal then
             return
         end
-
         local buffer = buffers[opts.buf]
         local row, col = util.get_cursor()
 
@@ -175,9 +175,6 @@ do
     end
 
     local function on_mode_change(opts)
-        if vim.g.md_math_no_hide_marks then
-            return
-        end
         local buffer = buffers[opts.buf]
         local old_mode = vim.v.event.old_mode:sub(1, 1)
         local mode = vim.v.event.new_mode:sub(1, 1)
@@ -189,7 +186,7 @@ do
             on_cursor(opts)
         end
 
-        local hide = mode == 'i' or mode == 'R'
+        local hide = config.hide_on_insert and (mode == 'i' or mode == 'R')
         buffer:show(not hide)
     end
 

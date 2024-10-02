@@ -32,14 +32,6 @@ function Buffer:_init(bufnr)
 
     self:attach()
 
-    -- nvim.create_autocmd({'BufUnload'}, {
-    --     buffer = bufnr,
-    --     group = id,
-    --     callback = function()
-    --         self:free()
-    --     end
-    -- })
-
     nvim.create_autocmd({'InsertLeave'}, {
         buffer = bufnr,
         group = augroup,
@@ -181,16 +173,6 @@ function M.enable(bufnr)
     end
 end
 
--- TODO: disable function
-
--- function M.parse(bufnr, start_row, end_row)
---     local buffer = buffers[bufnr]
---     if not buffer then
---         error('Invalid buffer: ' .. bufnr)
---     end
---     return buffer:parse(start_row, end_row)
--- end
-
 function M.free(bufnr)
     if bufnr == 0 then
         bufnr = nvim.get_current_buf()
@@ -200,6 +182,8 @@ function M.free(bufnr)
         buffer:free()
     end
 end
+
+M.disable = M.free
 
 function M.free_all()
     for bufnr, buffer in pairs(buffers) do

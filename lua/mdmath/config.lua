@@ -1,26 +1,46 @@
 local default_opts = {
-    enabled_filetypes = 'markdown'
+    filetypes = 'markdown',
+    foreground = 'Normal',
+    anticonceal = true,
+    hide_on_insert = true,
 }
 
 local _opts = nil
 
+local M = {
+    _validated = false,
+}
 local mt = {
+    __index = function()
+        if _opts == nil then
+            error 'mdmath.nvim opts have not been configured'
+        elseif not M._validated then
+            error 'mdmath.nvim opts have not been validated'
+        else
+            error 'mdmath.nvim bad index (this should not happen)'
+        end
+    end,
     __newindex = function()
         error 'Attempt to modify read-only mdmath.nvim opts'
     end,
 }
-local M = {
-    _validated = false,
-}
 
-function M.validate()
+function M.validate() 
     if M._validated then
         return
     end
+    local opts = _opts
 
-    -- TODO: validate _opts
+    vim.validate {
+        foreground = {opts.foreground, 'string'},
+        anticonceal = {opts.anticonceal, 'boolean'},
+        hide_on_insert = {opts.hide_on_insert, 'boolean'},
+    }
+
+    opts.foreground = require'mdmath.util'.hl_as_hex(opts.foreground)
 
     M._validated = true
+    mt.__index = _opts
 end
 
 function M._set(opts)
@@ -29,12 +49,6 @@ function M._set(opts)
     end
 
     _opts = vim.tbl_extend('force', default_opts, opts or {})
-    mt.__index = function(_, key)
-        M.validate() -- validate on first access
-
-        mt.__index = _opts -- no need to validate anymore
-        return _opts[key]
-    end
 end
 
 setmetatable(M, mt)

@@ -13,41 +13,51 @@ function M.setup(opts)
         return
     end
 
-    -- TODO: validate only enabled_filetypes
-    local enabled_filetypes = opts and opts.enabled_filetypes or {'markdown'}
+    local filetypes = opts
+        and opts.filetypes
+        or {'markdown'}
 
-    local config = require'mdmath.config'
-    config._set(opts)
+    assert(type(filetypes) == 'table', 'filetypes: expected table, got ' .. type(filetypes))
 
-    if enabled_filetypes[1] ~= nil then
+    -- empty case: {}
+    if filetypes[1] ~= nil then
         local group = api.nvim_create_augroup('MdMath', {clear = true})
 
         api.nvim_create_autocmd('FileType', {
             group = group,
-            pattern = enabled_filetypes,
+            pattern = filetypes,
             callback = function()
-                M.enable(0)
+                local bufnr = vim.api.nvim_get_current_buf()
+                
+                -- delay until next tick, since it's not needed for the UI
+                vim.schedule(function()
+                    if api.nvim_buf_is_valid(bufnr) then
+                        M.enable(bufnr)
+                    end
+                end)
             end,
         })
     end
 
+    require'mdmath.config'._set(opts)
     M.is_loaded = true
 end
 
--- function M.enable(bufnr)
---     if not M.is_loaded then
---         error "Attempt to call mdmath.nvim before it's loaded"
---     end
+local function validate()
+    if not M.is_loaded then
+        error "Attempt to call mdmath.nvim before it's loaded"
+    end
+    require'mdmath.config'.validate()
+end
 
---     require 'mdmath.manager'.enable(bufnr or 0)
--- end
+function M.enable(bufnr)
+    validate()
+    require 'mdmath.manager'.enable(bufnr or 0)
+end
 
--- function M.disable(bufnr)
---     if not M.is_loaded then
---         error "Attempt to call mdmath.nvim before it's loaded"
---     end
-
---     require 'mdmath.manager'.disable(bufnr or 0)
--- end
+function M.disable(bufnr)
+    validate()
+    require 'mdmath.manager'.disable(bufnr or 0)
+end
 
 return M

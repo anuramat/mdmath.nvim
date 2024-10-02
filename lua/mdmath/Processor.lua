@@ -1,6 +1,7 @@
 local vim = vim
 local api = vim.api
 local uv = vim.loop
+local config = require'mdmath.config'
 local util = require'mdmath.util'
 
 local get_next_id
@@ -42,6 +43,8 @@ end
 function Processor:setForeground(color)
     if type(color) == 'number' then
         color = string.format('#%06x', color)
+    elseif type(color) ~= 'string' then
+        error('color: expected string|number, got ' .. type(color))
     end
 
     local code, err = self.pipes[0]:write(string.format("0:fgcolor:%s", color))
@@ -166,10 +169,7 @@ function Processor:_init()
 
     self:_listen()
 
-    -- TODO: Color should be configurable
-
-    local foreground = vim.api.nvim_get_hl(0, {name = 'Normal', create = false, link = false}).fg
-    self:setForeground(foreground)
+    self:setForeground(config.foreground)
 end
 
 function Processor:close()
