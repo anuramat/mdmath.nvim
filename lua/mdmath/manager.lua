@@ -4,6 +4,8 @@ local ts = vim.treesitter
 local uv = vim.uv
 local Equation = require'mdmath.Equation'
 
+local augroup = nvim.create_augroup('MdMathManager', {clear = true})
+
 local M = {}
 local buffers = {}
 
@@ -38,13 +40,9 @@ function Buffer:_init(bufnr)
     --     end
     -- })
 
-    local id = nvim.create_augroup('MdMathManager', {
-        clear = false
-    })
-
     nvim.create_autocmd({'InsertLeave'}, {
         buffer = bufnr,
-        group = id,
+        group = augroup,
         callback = function()
             self:parse_view()
         end
@@ -68,7 +66,7 @@ function Buffer:free()
     end
 
     nvim.clear_autocmds {
-        group = 'MdMathManager',
+        group = augroup,
         buffer = self.bufnr
     }
 end
@@ -182,6 +180,8 @@ function M.enable(bufnr)
         error('Invalid buffer: ' .. bufnr)
     end
 end
+
+-- TODO: disable function
 
 -- function M.parse(bufnr, start_row, end_row)
 --     local buffer = buffers[bufnr]

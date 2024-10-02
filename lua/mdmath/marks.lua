@@ -306,7 +306,7 @@ end
 do
     nvim.set_decoration_provider(ns, {
         on_start = function()
-            if buffers.refs == 0 then
+            if num_buffers == 0 then
                 return false
             end
         end,
