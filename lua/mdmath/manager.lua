@@ -1,3 +1,5 @@
+require'mdmath.config'.validate()
+
 local nvim = require'mdmath.nvim'
 local util = require'mdmath.util'
 local ts = vim.treesitter
@@ -43,6 +45,17 @@ function Buffer:_init(bufnr)
     self:parse_view()
 end
 
+function Buffer:clear(reset)
+    for _, eq in ipairs(self.equations) do
+        eq:invalidate()
+    end
+    self.equations = {}
+
+    if reset then
+        self:reset_timer()
+    end
+end
+
 function Buffer:free()
     if not self.active then
         return
@@ -53,9 +66,7 @@ function Buffer:free()
     self.timer:stop()
     self.timer:close()
     
-    for _, eq in ipairs(self.equations) do
-        eq:invalidate()
-    end
+    self:clear(false)
 
     nvim.clear_autocmds {
         group = augroup,
@@ -173,7 +184,7 @@ function M.enable(bufnr)
     end
 end
 
-function M.free(bufnr)
+function M.disable(bufnr)
     if bufnr == 0 then
         bufnr = nvim.get_current_buf()
     end
@@ -183,11 +194,19 @@ function M.free(bufnr)
     end
 end
 
-M.disable = M.free
-
-function M.free_all()
+function M.disable_all()
     for bufnr, buffer in pairs(buffers) do
         buffer:free()
+    end
+end
+
+function M.clear(bufnr)
+    if bufnr == 0 then
+        bufnr = nvim.get_current_buf()
+    end
+    local buffer = buffers[bufnr]
+    if buffer then
+        buffer:clear(true)
     end
 end
 

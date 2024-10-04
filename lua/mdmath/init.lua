@@ -29,12 +29,12 @@ function M.setup(opts)
             callback = function()
                 local bufnr = vim.api.nvim_get_current_buf()
                 
-                -- delay until next tick, since it's not needed for the UI
-                vim.schedule(function()
+                -- defer the function, since it's not needed for the UI
+                vim.defer_fn(function()
                     if api.nvim_buf_is_valid(bufnr) then
                         M.enable(bufnr)
                     end
-                end)
+                end, 100)
             end,
         })
     end
@@ -43,21 +43,25 @@ function M.setup(opts)
     M.is_loaded = true
 end
 
-local function validate()
+function M.enable(bufnr)
     if not M.is_loaded then
         error "Attempt to call mdmath.nvim before it's loaded"
     end
-    require'mdmath.config'.validate()
-end
-
-function M.enable(bufnr)
-    validate()
     require 'mdmath.manager'.enable(bufnr or 0)
 end
 
 function M.disable(bufnr)
-    validate()
+    if not M.is_loaded then
+        error "Attempt to call mdmath.nvim before it's loaded"
+    end
     require 'mdmath.manager'.disable(bufnr or 0)
+end
+
+function M.clear(bufnr)
+    if not M.is_loaded then
+        error "Attempt to call mdmath.nvim before it's loaded"
+    end
+    require 'mdmath.manager'.clear(bufnr or 0)
 end
 
 return M

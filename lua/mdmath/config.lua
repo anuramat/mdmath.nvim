@@ -29,6 +29,9 @@ function M.validate()
     if M._validated then
         return
     end
+    if _opts == nil then
+        error "Attempt to validate mdmath.nvim before configuring it (see README for more information)"
+    end
     local opts = _opts
 
     vim.validate {

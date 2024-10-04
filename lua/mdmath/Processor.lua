@@ -4,6 +4,9 @@ local uv = vim.loop
 local config = require'mdmath.config'
 local util = require'mdmath.util'
 
+local plugin_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h")
+local processor_dir = plugin_dir .. '/mdmath-js'
+
 local get_next_id
 do
     local id = 0
@@ -13,8 +16,7 @@ do
     end
 end
 
---FIXME: The JS processor should be bundled with the plugin
-local PROCESS_PATH = vim.fn.expand('~/mdmath-js/src/index.js')
+local PROCESS_PATH = processor_dir .. '/src/processor.js'
 
 local Processor = util.class 'Processor'
 
