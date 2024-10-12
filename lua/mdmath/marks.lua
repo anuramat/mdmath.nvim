@@ -3,7 +3,7 @@ local util = require'mdmath.util'
 local hl = require'mdmath.highlight-colors'
 local tracker = require'mdmath.tracker'
 local nvim = require'mdmath.nvim'
-local config = require'mdmath.config'
+local config = require'mdmath.config'.opts
 
 local ns = nvim.create_namespace('mdmath-marks')
 

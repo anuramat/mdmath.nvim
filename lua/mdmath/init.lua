@@ -36,31 +36,15 @@ function M.setup(opts)
                 end, 100)
             end,
         })
-
-        local subcommands = {
-            enable = M.enable,
-            disable = M.disable,
-            clear = M.clear,
-        }
-
-        api.nvim_create_user_command('MdMath', function(opts)
-            local cmd = opts.fargs[1]
-            if not subcommands[cmd] then
-                vim.notify('MdMath: invalid subcommand: ' .. cmd, vim.log.levels.ERROR)
-                return
-            end
-
-            subcommands[cmd]()
-        end, {
-            nargs = 1,
-            complete = function()
-                return { 'enable', 'disable', 'clear' }
-            end,
-        });
     end
 
-    require'mdmath.config'._set(opts)
+    require'mdmath.config'.set_opts(opts)
     M.is_loaded = true
+
+    local filetype = vim.bo.filetype
+    if filetype and vim.tbl_contains(filetypes, filetype) then
+        M.enable()
+    end
 end
 
 function M.enable(bufnr)

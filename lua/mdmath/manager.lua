@@ -1,5 +1,3 @@
-require'mdmath.config'.validate()
-
 local nvim = require'mdmath.nvim'
 local util = require'mdmath.util'
 local ts = vim.treesitter

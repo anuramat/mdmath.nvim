@@ -9,25 +9,29 @@ local default_opts = {
 local _opts = nil
 
 local M = {
-    _validated = false,
+    validated = false,
 }
+
 local mt = {
-    __index = function()
-        if _opts == nil then
-            error 'mdmath.nvim opts have not been configured'
-        elseif not M._validated then
-            error 'mdmath.nvim opts have not been validated'
-        else
-            error 'mdmath.nvim bad index (this should not happen)'
+    __index = function(_, key)
+        if key ~= 'opts' then
+            return nil
         end
+
+        if _opts == nil then
+            error 'mdmath.nvim has not been configured'
+        end
+
+        M.validate()
+        return _opts
     end,
     __newindex = function()
-        error 'Attempt to modify read-only mdmath.nvim opts'
+        error 'Attempt to modify read-only mdmath.nvim config'
     end,
 }
 
 function M.validate() 
-    if M._validated then
+    if M.validated then
         return
     end
     if _opts == nil then
@@ -43,11 +47,17 @@ function M.validate()
 
     opts.foreground = require'mdmath.util'.hl_as_hex(opts.foreground)
 
-    M._validated = true
-    mt.__index = _opts
+    setmetatable(opts, {
+        __newindex = function()
+            error 'Attempt to modify read-only mdmath.nvim opts'
+        end,
+    })
+
+    M.validated = true
+    rawset(M, 'opts', opts)
 end
 
-function M._set(opts)
+function M.set_opts(opts)
     if _opts then
         error 'Attempt to configure mdmath.nvim opts multiple times (how did you even do that?)'
     end

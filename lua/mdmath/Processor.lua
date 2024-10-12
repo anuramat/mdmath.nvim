@@ -1,7 +1,7 @@
 local vim = vim
 local api = vim.api
 local uv = vim.loop
-local config = require'mdmath.config'
+local config = require'mdmath.config'.opts
 local util = require'mdmath.util'
 
 local plugin_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h")
