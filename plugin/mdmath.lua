@@ -1,8 +1,5 @@
-if vim.v.vim_did_enter ~= 1 then
-    -- A trick to prevent calling setup before configuring it.
-    vim.api.nvim_create_autocmd('VimEnter', {
-        callback = function()
-            require'mdmath'.setup()
-        end,
-    })
+-- If your plugin manager calls `plugin` before `setup`, you may need to
+-- disable auto setup to be able to configurate the plugin using require'mdmath'.setup {...}
+if not vim.g.mdmath_disable_auto_setup then
+    require'mdmath'.setup()
 end

@@ -7,8 +7,7 @@ M.is_loaded = false
 function M.setup(opts)
     if M.is_loaded then
         if opts then
-            error("Attempt to setup mdmath.nvim (it's probably your plugin manager's fault, see " ..
-                "README for more information)")
+            error("Attempt to setup mdmath.nvim multiple times (see README for more information)")
         end
         return
     end
@@ -37,6 +36,27 @@ function M.setup(opts)
                 end, 100)
             end,
         })
+
+        local subcommands = {
+            enable = M.enable,
+            disable = M.disable,
+            clear = M.clear,
+        }
+
+        api.nvim_create_user_command('MdMath', function(opts)
+            local cmd = opts.fargs[1]
+            if not subcommands[cmd] then
+                vim.notify('MdMath: invalid subcommand: ' .. cmd, vim.log.levels.ERROR)
+                return
+            end
+
+            subcommands[cmd]()
+        end, {
+            nargs = 1,
+            complete = function()
+                return { 'enable', 'disable', 'clear' }
+            end,
+        });
     end
 
     require'mdmath.config'._set(opts)
@@ -45,21 +65,21 @@ end
 
 function M.enable(bufnr)
     if not M.is_loaded then
-        error "Attempt to call mdmath.nvim before it's loaded"
+        error "Attempt to call mdmath.nvim before it's loaded (see README for more information)"
     end
     require 'mdmath.manager'.enable(bufnr or 0)
 end
 
 function M.disable(bufnr)
     if not M.is_loaded then
-        error "Attempt to call mdmath.nvim before it's loaded"
+        error "Attempt to call mdmath.nvim before it's loaded (see README for more information)"
     end
     require 'mdmath.manager'.disable(bufnr or 0)
 end
 
 function M.clear(bufnr)
     if not M.is_loaded then
-        error "Attempt to call mdmath.nvim before it's loaded"
+        error "Attempt to call mdmath.nvim before it's loaded (see README for more information)"
     end
     require 'mdmath.manager'.clear(bufnr or 0)
 end
