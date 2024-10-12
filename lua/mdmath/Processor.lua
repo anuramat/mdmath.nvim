@@ -49,8 +49,13 @@ function Processor:setForeground(color)
         error('color: expected string|number, got ' .. type(color))
     end
 
-    local code, err = self.pipes[0]:write(string.format("0:fgcolor:%s", color))
+    local code, err = self.pipes[0]:write(string.format("0:fgcolor:%s:", color))
     self:_assert(not err, 'failed to set foreground: ', err)
+end
+
+function Processor:setScale(scale)
+    local code, err = self.pipes[0]:write(string.format("0:scale:%.2f:", scale))
+    self:_assert(not err, 'failed to set scale: ', err)
 end
 
 function Processor:request(data, width, height, center, callback)
@@ -172,6 +177,7 @@ function Processor:_init()
     self:_listen()
 
     self:setForeground(config.foreground)
+    self:setScale(config.scale)
 end
 
 function Processor:close()

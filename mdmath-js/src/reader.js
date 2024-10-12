@@ -54,10 +54,10 @@ reader.listen = function(callback) {
                     height,
                     center,
                     data
-                }
+                };
                 callback(response);
             } else if(type == 'fgcolor') {
-                const color = (await stream.readFixedString(7)).toLowerCase();
+                const color = (await stream.readString()).toLowerCase();
                 if (!color.match(/^#[0-9a-f]{6}$/))
                     response_fail(`Invalid color: ${color}`);
 
@@ -65,7 +65,16 @@ reader.listen = function(callback) {
                     identifier,
                     type,
                     color
-                }
+                };
+                callback(response);
+            } else if(type == 'scale') {
+                const scale = await stream.readFloat();
+
+                const response = {
+                    identifier,
+                    type,
+                    scale
+                };
                 callback(response);
             } else {
                 response_fail(`Identifier ${identifier}: Invalid request type: ${type}`);

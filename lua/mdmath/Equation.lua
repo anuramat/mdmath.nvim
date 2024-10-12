@@ -126,7 +126,8 @@ function Equation:_init(bufnr, row, col, text)
 
     local cell_width, cell_height = terminfo.cell_size()
 
-    -- dynamic width for multiline equations
+    -- dynamic size for multiline equations
+    -- FIXME: dynamic size is not implemented yet in the JS side
     local img_width = self.lines and (self.width * cell_width) or (self.width * cell_width)
     local img_height = (self.lines and #self.lines or 1) * cell_height
 
@@ -150,7 +151,9 @@ function Equation:invalidate()
 
     self.pos:cancel()
     marks.remove(self.bufnr, self.mark_id)
-    self.image:close()
+    if self.image then
+        self.image:close()
+    end
     self.mark_id = nil
 end
 

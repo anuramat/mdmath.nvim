@@ -26,6 +26,8 @@ const svgCache = {};
 
 let fgColor = '#ff00ff';
 
+let imageScale = 1;
+
 let MathJax = undefined;
 
 function sendNotification(message) {
@@ -92,6 +94,9 @@ function writeError(identifier, error) {
   * @param {string} equation
 */
 async function processEquation(identifier, width, height, center, equation) {
+    width *= imageScale;
+    height *= imageScale;
+
     const equation_key = `${equation}_${width}x${height}`;
     if (equation_key in equationMap) {
         const equationObj = equationMap[equation_key];
@@ -116,18 +121,20 @@ async function processEquation(identifier, width, height, center, equation) {
     write(identifier, filename);
 }
 
-function processAll(response) {
-    if (response.type === 'request') {
+function processAll(request) {
+    if (request.type === 'request') {
         return processEquation(
-            response.identifier,
-            response.width,
-            response.height,
-            response.center,
-            response.data
+            request.identifier,
+            request.width,
+            request.height,
+            request.center,
+            request.data
         );
-    } else if (response.type === 'fgcolor') {
+    } else if (request.type === 'fgcolor') {
         // FIXME: Invalidate cache when color changes
-        fgColor = response.color;
+        fgColor = request.color;
+    } else if (request.type === 'scale') {
+        imageScale = request.scale;
     }
 }
 

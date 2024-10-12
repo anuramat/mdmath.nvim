@@ -64,6 +64,15 @@ export function makeAsyncStream(stream, sep) {
         return num;
     }
 
+    M.readFloat = async () => {
+        const str = await M.readString();
+        const num = parseFloat(str);
+
+        if (isNaN(num) || num < 0)
+            throw new Error(`Error: Invalid number: ${str}`);
+        return num;
+    }
+
     M.readFixedString = async (length) => {
         const buffer = [];
         for (let i = 0; i < length; i++) {

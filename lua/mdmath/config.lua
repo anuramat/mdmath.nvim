@@ -3,6 +3,7 @@ local default_opts = {
     foreground = 'Normal',
     anticonceal = true,
     hide_on_insert = true,
+    scale = 1.0,
 }
 
 local _opts = nil
