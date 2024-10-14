@@ -41,29 +41,31 @@ function M.setup(opts)
     require'mdmath.config'.set_opts(opts)
     M.is_loaded = true
 
-    local filetype = vim.bo.filetype
-    if filetype and vim.tbl_contains(filetypes, filetype) then
-        M.enable()
+    if opts ~= false then
+        local filetype = vim.bo.filetype
+        if filetype and vim.tbl_contains(filetypes, filetype) then
+            M.enable()
+        end
     end
 end
 
 function M.enable(bufnr)
     if not M.is_loaded then
-        error "Attempt to call mdmath.nvim before it's loaded (see README for more information)"
+        M.setup(false)
     end
     require 'mdmath.manager'.enable(bufnr or 0)
 end
 
 function M.disable(bufnr)
     if not M.is_loaded then
-        error "Attempt to call mdmath.nvim before it's loaded (see README for more information)"
+        M.setup(false)
     end
     require 'mdmath.manager'.disable(bufnr or 0)
 end
 
 function M.clear(bufnr)
     if not M.is_loaded then
-        error "Attempt to call mdmath.nvim before it's loaded (see README for more information)"
+        M.setup(false)
     end
     require 'mdmath.manager'.clear(bufnr or 0)
 end
