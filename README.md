@@ -73,7 +73,7 @@ Currently, it only supports rendering the image inline, features like rendering 
 
 ## Looking at the future!
 
-The plugin is currently at alpha, many features are planned for the next versions, here are some of the planned features:
+The plugin is currently at alpha, many features are planned for the next versions, here are some of the planned features, also you have any suggestions, feel free to open an issue:
   - [ ] An API to generate equation images.
   - [ ] Render in floating windows
   - [ ] Render out-of-line
