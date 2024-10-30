@@ -1,6 +1,6 @@
 # ✨ mdmath.nvim
 
-A Markdown equation previewer inside Neovim.
+A Markdown equation previewer inside Neovim, using Kitty Graphics Protocol.
 
 ## Requirements
   - Neovim version `TODO`
