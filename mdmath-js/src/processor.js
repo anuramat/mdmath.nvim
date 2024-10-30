@@ -75,6 +75,8 @@ async function equationToSVG(equation) {
             return svgCache[equation] = {
                 error: err.message
             }
+        } else {
+
         }
 
         throw err;
@@ -94,6 +96,9 @@ function writeError(identifier, error) {
   * @param {string} equation
 */
 async function processEquation(identifier, width, height, center, equation) {
+    if (!equation || equation.trim().length === 0)
+        return writeError(identifier, 'Equation is empty')
+
     width *= imageScale;
     height *= imageScale;
 
@@ -105,14 +110,17 @@ async function processEquation(identifier, width, height, center, equation) {
 
     let {svg, error} = await equationToSVG(equation);
     if (!svg)
-        return writeError(identifier, error); 
-
+        return writeError(identifier, error)
     svg = svg.replace(/currentColor/g, fgColor);
 
     const hash = sha256Hash(equation).slice(0, 7);
 
     const filename = `${IMG_DIR}/${hash}_${width}x${height}.png`;
-    await svg2png(svg, filename, width, height, center);
+    try {
+        await svg2png(svg, filename, width, height, center);
+    } catch (err) {
+        return writeError(identifier, 'System: ' + err.message);
+    }
 
     const equationObj = {equation, filename};
     equations.push(equationObj);
