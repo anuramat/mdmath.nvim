@@ -16,7 +16,7 @@ end
 
 local function kitty_send(params, payload)
     if not params.q then
-        params.q = 1
+        params.q = 2
     end
 
     local tbl = {}
