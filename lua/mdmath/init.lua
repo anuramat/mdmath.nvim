@@ -70,4 +70,8 @@ function M.clear(bufnr)
     require 'mdmath.manager'.clear(bufnr or 0)
 end
 
+function M.build()
+    require'mdmath.build'.build()
+end
+
 return M
