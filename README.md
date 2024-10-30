@@ -2,6 +2,8 @@
 
 A Markdown equation previewer inside Neovim.
 
+https://github.com/user-attachments/assets/9ee44f76-6706-4ed5-8cc3-0cd78c49dd4c
+
 ## Requirements
   - Neovim version `TODO`
   - Tree-sitter parser `markdown_inline`
