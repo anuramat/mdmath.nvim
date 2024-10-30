@@ -1,5 +1,5 @@
 local default_opts = {
-    filetypes = 'markdown',
+    filetypes = {'markdown'},
     foreground = 'Normal',
     anticonceal = true,
     hide_on_insert = true,
