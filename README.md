@@ -2,20 +2,24 @@
 
 A Markdown equation previewer inside Neovim, using Kitty Graphics Protocol.
 
-https://github.com/user-attachments/assets/9ee44f76-6706-4ed5-8cc3-0cd78c49dd4c
+https://github.com/user-attachments/assets/bcfab0d2-60fb-4e8a-9402-2be62a5504f6
 
 ## Requirements
-  - Neovim version `TODO`
+  - Neovim version `>=0.10.0`
   - Tree-sitter parser `markdown_inline`
 
 ### System requirements
-  - NodeJS version `TODO`
+  - NodeJS
   - `npm`
   - ImageMagick v6/v7
   - Linux/MacOS (not tested in MacOS, please open an issue if you are able to test it)
 
 You also need a terminal emulator that supports [Kitty Graphics Protocol#Unicode Placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders), the following terminals were tested.
-  - Kitty `>=0.28.0`
+  - [x] Kitty `>=0.28.0`
+  - [ ] Konsole (missing support for Unicode Placeholders)
+  - [ ] WezTerm (missing support for Unicode Placeholders)
+
+After some refactoring, I want to implement a fallback for terminals that support Kitty Graphics Protocol but doesn't support Unicode Placeholders.
 
 ### Installation
 
@@ -73,11 +77,15 @@ Currently, it only supports rendering the image inline, features like rendering 
   - `:MdMath clear`: Refresh all equations
   - `:MdMath build`: Build the node.js server
 
-## Looking at the future!
+## Looking to the future!
 
 The plugin is currently at alpha, many features are planned for the next versions, here are some of the planned features, also you have any suggestions, feel free to open an issue:
+  - [ ] Support Kitty Graphics Protocol without Unicode Placeholders.
   - [ ] An API to generate equation images.
   - [ ] Render in floating windows
   - [ ] Render out-of-line
   - [ ] Dynamic width and height
   - [ ] Improve scale of images (may need to work with Kitty for this one)
+  - [ ] Refactoring: LuaCATS annotations
+  - [ ] Documentation
+  - [ ] `:checkhealth`
