@@ -3,6 +3,7 @@ local api = vim.api
 local uv = vim.loop
 local config = require'mdmath.config'.opts
 local util = require'mdmath.util'
+local bit = require'bit'
 
 local plugin_dir = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h")
 local processor_dir = plugin_dir .. '/mdmath-js'
@@ -14,6 +15,10 @@ do
         id = id + 1
         return tostring(id)
     end
+end
+
+local function has(flags, flag)
+    return bit.band(flags, flag) == flag
 end
 
 local PROCESS_PATH = processor_dir .. '/src/processor.js'
@@ -28,15 +33,19 @@ function Processor:_assert(condition, ...)
     end
 end
 
-function Processor:_on_data(identifier, data_type, data)
+function Processor:_on_data(identifier, data_type, width, height, data)
     local callback = self.callbacks[identifier]
     if not callback then
         return util.err_message('no callback for identifier: ', identifier)
     end
     self.callbacks[identifier] = nil
 
-    if data_type == 'data' then
-        callback(data)
+    if data_type == 'image' then
+        callback({
+            width = width,
+            height = height,
+            data = data
+        })
     elseif data_type == 'error' then
         callback(nil, data)
     end
@@ -58,9 +67,9 @@ function Processor:setScale(scale)
     self:_assert(not err, 'failed to set scale: ', err)
 end
 
-function Processor:request(data, width, height, flags, callback)
+function Processor:request(data, cell_width, cell_height, width, height, flags, callback)
+    -- width/height should be number of cells
     -- flags: 0: none, 1: dynamic, 2: center, 3: dynamic + center
-    --        If dynamic, width and height are the terminal cell size
     --        TODO: flags should be a enum
 
     local identifier = get_next_id()
@@ -69,23 +78,28 @@ function Processor:request(data, width, height, flags, callback)
     end
     self.callbacks[identifier] = callback
 
-    local code, err = self.pipes[0]:write(string.format("%s:request:%d:%d:%d:%d:%s", identifier, width, height, flags, #data, data))
+    local code, err = self.pipes[0]:write(string.format("%s:request:%d:%d:%d:%d:%d:%d:%s", identifier, flags, cell_width, width, cell_height, height, #data, data))
     self:_assert(not err, 'failed to request: ', err)
 end
 
 function Processor:_listen()
     local separator = string.byte(':')
-    
+
+    -- TODO: use JSON instead of custom protocol 
     local states = {
         READING_IDENTIFIER = 0,
         READING_TYPE = 1,
-        READING_LENGTH = 2,
-        READING_DATA = 3
+        READING_WIDTH = 2,
+        READING_HEIGHT = 3,
+        READING_LENGTH = 4,
+        READING_DATA = 5
     }
 
     local state = states.READING_IDENTIFIER
     local identifier = ""
     local data_type = ""
+    local width = 0
+    local height = 0
     local length = 0
     local buffer = {}
 
@@ -101,7 +115,27 @@ function Processor:_listen()
         elseif state == states.READING_TYPE then
             if byte == separator then
                 data_type = table.concat(buffer)
-                self:_assert(data_type == "data" or data_type == "error", "Invalid data type: ", data_type)
+                self:_assert(data_type == "image" or data_type == "error", "Invalid data type: ", data_type)
+                buffer = {}
+                state = states.READING_WIDTH
+            else
+                table.insert(buffer, string.char(byte))
+            end
+        elseif state == states.READING_WIDTH then
+            if byte == separator then
+                local width_str = table.concat(buffer)
+                width = tonumber(width_str)
+                self:_assert(width, "Invalid width: ", width_str)
+                buffer = {}
+                state = states.READING_HEIGHT
+            else
+                table.insert(buffer, string.char(byte))
+            end
+        elseif state == states.READING_HEIGHT then
+            if byte == separator then
+                local height_str = table.concat(buffer)
+                height = tonumber(height_str)
+                self:_assert(height, "Invalid height: ", height_str)
                 buffer = {}
                 state = states.READING_LENGTH
             else
@@ -120,7 +154,7 @@ function Processor:_listen()
         elseif state == states.READING_DATA then
             table.insert(buffer, string.char(byte))
             if #buffer == length then
-                self:_on_data(identifier, data_type, table.concat(buffer))
+                self:_on_data(identifier, data_type, width, height, table.concat(buffer))
                 state = states.READING_IDENTIFIER
                 buffer = {}
             end

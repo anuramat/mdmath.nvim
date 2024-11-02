@@ -31,7 +31,7 @@ let imageScale = 1;
 let MathJax = undefined;
 
 function sendNotification(message) {
-    exec(`notify-send '${message}'`, (error, stdout, stderr) => {
+    exec(`notify-send "Processor.js" '${message}'`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${error.message}`);
         }
@@ -83,26 +83,26 @@ async function equationToSVG(equation) {
     }
 }
 
-function write(identifier, data) {
-    process.stdout.write(`${identifier}:data:${data.length}:${data}`);
+function write(identifier, width, height, data) {
+    process.stdout.write(`${identifier}:image:${width}:${height}:${data.length}:${data}`);
 }
 
 function writeError(identifier, error) {
-    process.stdout.write(`${identifier}:error:${error.length}:${error}`);
+    process.stdout.write(`${identifier}:error:0:0:${error.length}:${error}`);
 }
 
 /**
   * @param {string} identifier
   * @param {string} equation
 */
-async function processEquation(identifier, width, height, flags, equation) {
+async function processEquation(identifier, equation, cWidth, cHeight, width, height, flags) {
     if (!equation || equation.trim().length === 0)
         return writeError(identifier, 'Equation is empty')
 
-    const equation_key = `${equation}_${width}x${height}_${flags}`;
+    const equation_key = `${equation}_${cWidth}*${width}x${cHeight}*${height}_${flags}`;
     if (equation_key in equationMap) {
         const equationObj = equationMap[equation_key];
-        return write(identifier, equationObj.filename);
+        return write(identifier, equationObj.width, equationObj.height, equationObj.filename);
     }
 
     let {svg, error} = await equationToSVG(equation);
@@ -112,33 +112,35 @@ async function processEquation(identifier, width, height, flags, equation) {
 
     const hash = sha256Hash(equation).slice(0, 7);
 
-    width *= imageScale;
-    height *= imageScale;
+    const iWidth = width * cWidth * imageScale;
+    const iHeight = height * cHeight * imageScale;
     
     const center = !!(flags & 2)
-    const filename = `${IMG_DIR}/${hash}_${width}x${height}.png`;
+    const filename = `${IMG_DIR}/${hash}_${iWidth}x${iHeight}.png`;
 
     try {
-        await svg2png(svg, filename, width, height, center);
+        await svg2png(svg, filename, iWidth, iHeight, center);
     } catch (err) {
         return writeError(identifier, 'System: ' + err.message);
     }
 
-    const equationObj = {equation, filename};
+    const equationObj = {equation, filename, width, height};
     equations.push(equationObj);
     equationMap[equation_key] = equationObj;
 
-    write(identifier, filename);
+    write(identifier, width, height, filename);
 }
 
 function processAll(request) {
     if (request.type === 'request') {
         return processEquation(
             request.identifier,
+            request.data,
+            request.cellWidth,
+            request.cellHeight,
             request.width,
             request.height,
-            request.flags,
-            request.data
+            request.flags
         );
     } else if (request.type === 'fgcolor') {
         // FIXME: Invalidate cache when color changes

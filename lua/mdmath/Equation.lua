@@ -31,13 +31,13 @@ function Equation:_create(res, err)
         return
     end
 
-    local filename = res
+    local filename = res.data
+
+    local width = res.width
+    local height = res.height
 
     -- Multiline equations
     if self.lines then
-        local width = self.width
-        local height = #self.lines
-
         local image = Image.new(height, width, filename)
         local texts = image:text()
         local color = image:color()
@@ -53,6 +53,13 @@ function Equation:_create(res, err)
             lines[i] = { rtext, self.lines[i]:len() }
         end
 
+        if height > #self.lines then
+            for i = #self.lines + 1, height do
+                lines[i] = { padding, -1 } -- -1 means virtual line
+            end
+        end
+        lines[#lines + 1] = { 'teste', -1 } 
+
         vim.schedule(function()
             if self.valid then
                 self.mark_id = marks.add(self.bufnr, self.pos[1], self.pos[2], {
@@ -67,7 +74,7 @@ function Equation:_create(res, err)
             end
         end)
     else
-        local image = Image.new(1, self.width, filename)
+        local image = Image.new(height, width, filename)
         local text = image:text()[1]
         local color = image:color()
 
@@ -126,20 +133,17 @@ function Equation:_init(bufnr, row, col, text)
 
     local cell_width, cell_height = terminfo.cell_size()
 
-    -- dynamic size for multiline equations
-    local flags, img_width, img_height
+    local flags, height
     if self.lines then
-        img_width = self.width * cell_width
-        img_height = #self.lines * cell_height
+        height = #self.lines
         flags = 1 -- dynamic
     else
-        img_width = self.width * cell_width
-        img_height = cell_height
+        height = 1
         flags = 2 -- centered
     end
 
     local processor = Processor.from_bufnr(bufnr)
-    processor:request(self.equation, img_width, img_height, flags, function(res, err)
+    processor:request(self.equation, cell_width, cell_height, self.width, height, flags, function(res, err)
         if self.valid then
             self:_create(res, err)
         end

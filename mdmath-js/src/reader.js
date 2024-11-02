@@ -29,11 +29,14 @@ reader.listen = function(callback) {
             const identifier = await stream.readString();
             const type = await stream.readString();
             if (type == 'request') {
-                const width = await stream.readInt();
-                const height = await stream.readInt();
-
                 // TODO: Flags should be a enum
                 const flags = await stream.readInt();
+
+                const cellWidth = await stream.readInt();
+                const width = await stream.readInt();
+
+                const cellHeight = await stream.readInt();
+                const height = await stream.readInt();
 
                 const length = await stream.readInt();
                 const data = await stream.readFixedString(length);
@@ -41,6 +44,8 @@ reader.listen = function(callback) {
                 const response = {
                     identifier,
                     type,
+                    cellWidth,
+                    cellHeight,
                     width,
                     height,
                     flags,
