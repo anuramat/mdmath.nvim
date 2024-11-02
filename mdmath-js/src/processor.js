@@ -95,14 +95,11 @@ function writeError(identifier, error) {
   * @param {string} identifier
   * @param {string} equation
 */
-async function processEquation(identifier, width, height, center, equation) {
+async function processEquation(identifier, width, height, flags, equation) {
     if (!equation || equation.trim().length === 0)
         return writeError(identifier, 'Equation is empty')
 
-    width *= imageScale;
-    height *= imageScale;
-
-    const equation_key = `${equation}_${width}x${height}`;
+    const equation_key = `${equation}_${width}x${height}_${flags}`;
     if (equation_key in equationMap) {
         const equationObj = equationMap[equation_key];
         return write(identifier, equationObj.filename);
@@ -115,7 +112,12 @@ async function processEquation(identifier, width, height, center, equation) {
 
     const hash = sha256Hash(equation).slice(0, 7);
 
+    width *= imageScale;
+    height *= imageScale;
+    
+    const center = !!(flags & 2)
     const filename = `${IMG_DIR}/${hash}_${width}x${height}.png`;
+
     try {
         await svg2png(svg, filename, width, height, center);
     } catch (err) {
@@ -135,13 +137,14 @@ function processAll(request) {
             request.identifier,
             request.width,
             request.height,
-            request.center,
+            request.flags,
             request.data
         );
     } else if (request.type === 'fgcolor') {
         // FIXME: Invalidate cache when color changes
         fgColor = request.color;
     } else if (request.type === 'scale') {
+        // FIXME: Invalidate cache when scale changes
         imageScale = request.scale;
     }
 }

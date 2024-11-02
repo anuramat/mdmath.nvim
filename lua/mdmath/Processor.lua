@@ -58,15 +58,18 @@ function Processor:setScale(scale)
     self:_assert(not err, 'failed to set scale: ', err)
 end
 
-function Processor:request(data, width, height, center, callback)
+function Processor:request(data, width, height, flags, callback)
+    -- flags: 0: none, 1: dynamic, 2: center, 3: dynamic + center
+    --        If dynamic, width and height are the terminal cell size
+    --        TODO: flags should be a enum
+
     local identifier = get_next_id()
     if self.callbacks[identifier] then
         return util.err_message('identifier already in use: ', identifier, ' (how the hell did this happen?)')
     end
     self.callbacks[identifier] = callback
 
-    center = center and 'true' or 'false'
-    local code, err = self.pipes[0]:write(string.format("%s:request:%d:%d:%s:%d:%s", identifier, width, height, center, #data, data))
+    local code, err = self.pipes[0]:write(string.format("%s:request:%d:%d:%d:%d:%s", identifier, width, height, flags, #data, data))
     self:_assert(not err, 'failed to request: ', err)
 end
 

@@ -127,12 +127,19 @@ function Equation:_init(bufnr, row, col, text)
     local cell_width, cell_height = terminfo.cell_size()
 
     -- dynamic size for multiline equations
-    -- FIXME: dynamic size is not implemented yet in the JS side
-    local img_width = self.lines and (self.width * cell_width) or (self.width * cell_width)
-    local img_height = (self.lines and #self.lines or 1) * cell_height
+    local flags, img_width, img_height
+    if self.lines then
+        img_width = self.width * cell_width
+        img_height = #self.lines * cell_height
+        flags = 1 -- dynamic
+    else
+        img_width = self.width * cell_width
+        img_height = cell_height
+        flags = 2 -- centered
+    end
 
     local processor = Processor.from_bufnr(bufnr)
-    processor:request(self.equation, img_width, img_height, not self.lines, function(res, err)
+    processor:request(self.equation, img_width, img_height, flags, function(res, err)
         if self.valid then
             self:_create(res, err)
         end

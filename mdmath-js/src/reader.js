@@ -23,11 +23,6 @@ const reader = {}
 
 reader.listen = function(callback) {
     const stream = makeAsyncStream(process.stdin, ':');
-    let identifier;
-    let width;
-    let height;
-    let center;
-    let length;
 
     async function loop() {
         while (await stream.waitReadable()) {
@@ -35,16 +30,12 @@ reader.listen = function(callback) {
             const type = await stream.readString();
             if (type == 'request') {
                 const width = await stream.readInt();
-
                 const height = await stream.readInt();
 
-                const center_ = await stream.readString();
-                if (center_ !== 'true' && center_ !== 'false') 
-                    response_fail(`Invalid center: ${center_}`);
-                const center = center_ === 'true';
+                // TODO: Flags should be a enum
+                const flags = await stream.readInt();
 
                 const length = await stream.readInt();
-
                 const data = await stream.readFixedString(length);
 
                 const response = {
@@ -52,7 +43,7 @@ reader.listen = function(callback) {
                     type,
                     width,
                     height,
-                    center,
+                    flags,
                     data
                 };
                 callback(response);
