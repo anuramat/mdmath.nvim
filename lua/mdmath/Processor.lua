@@ -74,66 +74,66 @@ function Processor:_listen()
     local separator = string.byte(':')
     
     local states = {
-            READING_IDENTIFIER = 0,
-            READING_TYPE = 1,
-            READING_LENGTH = 2,
-            READING_DATA = 3
-        }
-        
-        local state = states.READING_IDENTIFIER
-        local identifier = ""
-        local data_type = ""
-        local length = 0
-        local buffer = {}
-    
-        local function process_byte(byte)
-            if state == states.READING_IDENTIFIER then
-                if byte == separator then
-                    identifier = table.concat(buffer)
-                    buffer = {}
-                    state = states.READING_TYPE
-                else
-                    table.insert(buffer, string.char(byte))
-                end
-            elseif state == states.READING_TYPE then
-                if byte == separator then
-                    data_type = table.concat(buffer)
-                    self:_assert(data_type == "data" or data_type == "error", "Invalid data type: ", data_type)
-                    buffer = {}
-                    state = states.READING_LENGTH
-                else
-                    table.insert(buffer, string.char(byte))
-                end
-            elseif state == states.READING_LENGTH then
-                if byte == separator then
-                    local length_str = table.concat(buffer)
-                    length = tonumber(length_str)
-                    self:_assert(length, "Invalid length: ", length_str)
-                    buffer = {}
-                    state = states.READING_DATA
-                else
-                    table.insert(buffer, string.char(byte))
-                end
-            elseif state == states.READING_DATA then
+        READING_IDENTIFIER = 0,
+        READING_TYPE = 1,
+        READING_LENGTH = 2,
+        READING_DATA = 3
+    }
+
+    local state = states.READING_IDENTIFIER
+    local identifier = ""
+    local data_type = ""
+    local length = 0
+    local buffer = {}
+
+    local function process_byte(byte)
+        if state == states.READING_IDENTIFIER then
+            if byte == separator then
+                identifier = table.concat(buffer)
+                buffer = {}
+                state = states.READING_TYPE
+            else
                 table.insert(buffer, string.char(byte))
-                if #buffer == length then
-                    self:_on_data(identifier, data_type, table.concat(buffer))
-                    state = states.READING_IDENTIFIER
-                    buffer = {}
-                end
+            end
+        elseif state == states.READING_TYPE then
+            if byte == separator then
+                data_type = table.concat(buffer)
+                self:_assert(data_type == "data" or data_type == "error", "Invalid data type: ", data_type)
+                buffer = {}
+                state = states.READING_LENGTH
+            else
+                table.insert(buffer, string.char(byte))
+            end
+        elseif state == states.READING_LENGTH then
+            if byte == separator then
+                local length_str = table.concat(buffer)
+                length = tonumber(length_str)
+                self:_assert(length, "Invalid length: ", length_str)
+                buffer = {}
+                state = states.READING_DATA
+            else
+                table.insert(buffer, string.char(byte))
+            end
+        elseif state == states.READING_DATA then
+            table.insert(buffer, string.char(byte))
+            if #buffer == length then
+                self:_on_data(identifier, data_type, table.concat(buffer))
+                state = states.READING_IDENTIFIER
+                buffer = {}
             end
         end
-    
-        local code, err = uv.read_start(self.pipes[1], function(err, data)
-            if data then
-                for i = 1, #data do
-                    local byte = data:byte(i)
-                    process_byte(byte)
-                end
+    end
+
+    local code, err = uv.read_start(self.pipes[1], function(err, data)
+        if data then
+            for i = 1, #data do
+                local byte = data:byte(i)
+                process_byte(byte)
             end
-        end)
-    
-        self:_assert(code == 0, 'failed to start reading from out pipe: ', err)
+        end
+    end)
+
+    self:_assert(code == 0, 'failed to start reading from out pipe: ', err)
 end
 
 function Processor:_init()
