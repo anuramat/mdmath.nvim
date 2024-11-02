@@ -61,9 +61,7 @@ function Image.unicode_at(row, col)
     return '\u{10EEEE}' .. diacritics[row] .. diacritics[col]
 end
 
-local teste_imagem
 function Image:text()
-    teste_imagem = self
     local text = {}
     for row = 1, self.rows do
         local T = {}
