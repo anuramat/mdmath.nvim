@@ -1,3 +1,5 @@
+-- TODO: This code needs to be basically rewritten. It's a mess.
+
 local vim = vim
 local util = require'mdmath.util'
 local hl = require'mdmath.highlight-colors'
@@ -15,18 +17,22 @@ function Mark:_init(bufnr, row, col, opts)
     self.bufnr = bufnr
     self.opts = opts
     self.visible = false
+    self.extmark_ids = {}
+    self.render_visible = false
 
     -- FIX: Currently, lines that are smaller than the current line doesn't override the
     --      text below it. Although this is not intended, I don't think it's worth fixing it now.
     if opts.lines then
-        self.num_lines = #opts.lines
+        self.total_lines = #opts.lines
 
         self.lengths = {}
         for _, line in ipairs(opts.lines) do
             local length = line[2]
-            table.insert(self.lengths, length)
+            if length >= 0 then
+                table.insert(self.lengths, length)
+            end
         end
-
+        self.num_lines = #self.lengths
     else
         self.num_lines = 1
         self.lengths = { opts.text[2] }
@@ -72,21 +78,12 @@ function Mark:contains(row, col)
     return true
 end
 
-function Mark:_redraw()
-    local row = self.pos[1]
-    nvim._redraw({
-        buf = self.bufnr,
-        range = { row, row + self.num_lines },
-    })
-end
-
 function Mark:set_visible(visible)
     if self.visible == visible then
         return
     end
 
     self.visible = visible
-    self:_redraw()
 end
 
 local Buffer = util.class 'Buffer'
@@ -118,7 +115,14 @@ end
 function Buffer:remove(id)
     local mark = self.marks[id]
     if mark then
-        mark:set_visible(false)
+        for _, id in ipairs(mark.extmark_ids) do
+            nvim.buf_del_extmark(self.bufnr, ns, id)
+        end
+        mark.extmark_ids = {}
+
+        mark.visible = false
+        mark.render_visible = false
+
         mark.pos:cancel()
         self.marks[id] = nil
     end
@@ -220,56 +224,135 @@ do
 end
 
 -- TODO: This can be done once instead of every redraw
-local function opts2extmark(opts)
+local function opts2extmark(opts, row, col)
     if opts.lines then
         local extmarks = {}
+
+        local is_last_virtual = false
         for _, line in ipairs(opts.lines) do
-            table.insert(extmarks, {
-                virt_text = { { line[1], opts.color } },
-                virt_text_pos = 'overlay',
-                virt_text_hide = true,
-                ephemeral = true,
-                undo_restore = false,
-            })
+            local row_data = { { line[1], opts.color } }
+            if line[2] < 0 then
+                if not is_last_virtual then
+                    local data = {
+                        virt_lines = { row_data },
+                        ephemeral = false,
+                        undo_restore = false,
+                    }
+                    table.insert(extmarks, {
+                        data = data,
+                        row = row - 1,
+                        col = col,
+                    })
+                else -- If the last line was virtual, just merge with it.
+                    table.insert(extmarks[#extmarks].data.virt_lines, row_data)
+                end
+                is_last_virtual = true
+            else
+                local data = {
+                    virt_text = row_data,
+                    virt_text_pos = 'overlay',
+                    virt_text_hide = true,
+                    ephemeral = false,
+                    undo_restore = false,
+                }
+                table.insert(extmarks, {
+                    data = data,
+                    row = row,
+                    col = col,
+                })
+                row = row + 1
+                is_last_virtual = false
+            end
+            col = 0 -- reset col for next line
         end
         return extmarks, true
     else
-        return {
+        local data = {
             virt_text = { { opts.text[1], opts.color } },
             virt_text_pos = opts.text_pos,
             virt_text_hide = true,
-            ephemeral = true,
+            ephemeral = false,
             undo_restore = false,
-        }, false
+        }
+        return { {
+            data = data,
+            row = row,
+            col = col
+        } }, false
     end
 end
 
-function Mark:_draw()
-    local extmarks, lines = opts2extmark(self.opts)
+local function create_empty_virtual(opts, row)
+    if not opts.lines then
+        return nil
+    end
+
+    local virtual = 0
+    for _, line in ipairs(opts.lines) do
+        if line[2] >= 0 then
+            row = row + 1
+        else
+            virtual = virtual + 1
+        end
+    end
+
+    local lines = {}
+    for i = 1, virtual do
+        table.insert(lines, { { '', opts.color } })
+    end
+
+    local data = {
+        virt_lines = lines,
+        virt_lines_above = true,
+        ephemeral = false,
+        undo_restore = false,
+    }
+
+    return {
+        row = row,
+        data = data
+    }
+end
+
+function Mark:_draw(visible)
     local row, col = unpack(self.pos)
 
-    if lines then
-        for i, extmark in ipairs(extmarks) do
-            nvim.buf_set_extmark(self.bufnr, ns, row, col, extmark)
+    for _, id in ipairs(self.extmark_ids) do
+        nvim.buf_del_extmark(self.bufnr, ns, id)
+    end
+    self.extmark_ids = {}
 
-            row = row + 1
-            col = 0 -- reset col for next line
+    if not visible then
+        local virtual = create_empty_virtual(self.opts, row)
+        if virtual then
+            local id = nvim.buf_set_extmark(self.bufnr, ns, virtual.row, 0, virtual.data)
+            table.insert(self.extmark_ids, id)
         end
-    else
-        nvim.buf_set_extmark(self.bufnr, ns, row, col, extmarks)
+        return
+    end
+
+    local extmarks, lines = opts2extmark(self.opts, row, col)
+
+    for i, extmark in ipairs(extmarks) do
+        local id = nvim.buf_set_extmark(self.bufnr, ns, extmark.row, extmark.col, extmark.data)
+        table.insert(self.extmark_ids, id)
     end
 end
 
-function Mark:draw()
-    if self.visible then
-        local ok, err = pcall(self._draw, self)
+function Mark:flush(hidden)
+    local visible = not hidden and self.visible
+    if visible ~= self.render_visible then
+        local ok, err = pcall(self._draw, self, visible)
         if not ok then
             vim.schedule(function()
                 self:remove()
                 nvim.err_writeln('mdmath: failed to draw mark: ' .. err)
             end)
         end
+        self.render_visible = visible
+        return true
     end
+    return false
 end
 
 local M = {}
@@ -307,16 +390,21 @@ do
                 return false
             end
         end,
-        on_win = function(_, _, bufnr)
+        on_win = function(_, _, bufnr, top, bot)
             buffer = rawget(buffers, bufnr)
-            if not buffer or not buffer._show then
+            if not buffer then
                 return false
             end
+            top = top - 1
 
             for _, self in pairs(buffer.marks) do
-                self:draw()
-            end
+                local frow = self.pos[1]
+                local lrow = self.pos[1] + self.num_lines - 1
 
+                if top <= lrow and frow <= bot then
+                    self:flush(not buffer._show)
+                end
+            end
             return false
         end,
     })

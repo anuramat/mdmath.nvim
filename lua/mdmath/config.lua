@@ -8,9 +8,16 @@ local default_opts = {
     anticonceal = true,
     -- Hide the text when in the Insert Mode.
     hide_on_insert = true,
-    -- Scale of the equation images, increase to prevent blurry images when increasing terminal
+    -- Enable dynamic size for non-inline equations.
+    dynamic = true,
+    -- Configure the scale of dynamic-rendered equations.
+    dynamic_scale = 1.0,
+
+    -- Internal scale of the equation images, increase to prevent blurry images when increasing terminal
     -- font, high values may produce aliased images.
-    scale = 1.0,
+    -- WARNING: This do not affect how the images are displayed, only how many pixels are used to render them.
+    --          See `dynamic_scale` to modify the displayed size.
+    internal_scale = 1.0,
 }
 
 local _opts = nil
@@ -50,6 +57,9 @@ function M.validate()
         foreground = {opts.foreground, 'string'},
         anticonceal = {opts.anticonceal, 'boolean'},
         hide_on_insert = {opts.hide_on_insert, 'boolean'},
+        dynamic = {opts.dynamic, 'boolean'},
+        dynamic_scale = {opts.dynamic_scale, 'number'},
+        internal_scale = {opts.internal_scale, 'number'},
     }
 
     opts.foreground = require'mdmath.util'.hl_as_hex(opts.foreground)
@@ -59,6 +69,12 @@ function M.validate()
             error 'Attempt to modify read-only mdmath.nvim opts'
         end,
     })
+
+    if opts.scale then
+        vim.schedule(function()
+            vim.notify('mdmath.nvim: `scale` option was removed, check `dynamic_scale` and `internal_scale`.', vim.log.levels.WARN)
+        end)
+    end
 
     M.validated = true
     rawset(M, 'opts', opts)

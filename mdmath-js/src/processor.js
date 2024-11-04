@@ -1,7 +1,7 @@
 import fs from 'fs';
 import mathjax from 'mathjax';
 import reader from './reader.js';
-import { svg2png } from './magick.js';
+import { svgDimensions, svg2png } from './magick.js';
 
 import { exec } from 'node:child_process';
 import { sha256Hash } from './util.js';
@@ -26,12 +26,13 @@ const svgCache = {};
 
 let fgColor = '#ff00ff';
 
-let imageScale = 1;
+let internalScale = 1;
+let dynamicScale = 1;
 
 let MathJax = undefined;
 
 function sendNotification(message) {
-    exec(`notify-send '${message}'`, (error, stdout, stderr) => {
+    exec(`notify-send "Processor.js" '${message}'`, (error, stdout, stderr) => {
         if (error) {
             console.error(`Error: ${error.message}`);
         }
@@ -83,66 +84,130 @@ async function equationToSVG(equation) {
     }
 }
 
-function write(identifier, data) {
-    process.stdout.write(`${identifier}:data:${data.length}:${data}`);
+function write(identifier, width, height, data) {
+    process.stdout.write(`${identifier}:image:${width}:${height}:${data.length}:${data}`);
 }
 
 function writeError(identifier, error) {
-    process.stdout.write(`${identifier}:error:${error.length}:${error}`);
+    process.stdout.write(`${identifier}:error:0:0:${error.length}:${error}`);
+}
+
+function parseViewbox(svgString) {
+    const viewboxMatch = svgString.match(/viewBox="([^"]+)"/);
+    if (!viewboxMatch) return null;
+
+    const [minX, minY, width, height] = viewboxMatch[1].split(' ').map(parseFloat);
+    return { minX, minY, width, height };
+}
+
+async function saveFile(filename, data) {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(filename, data, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
 }
 
 /**
   * @param {string} identifier
   * @param {string} equation
 */
-async function processEquation(identifier, width, height, center, equation) {
+async function processEquation(identifier, equation, cWidth, cHeight, width, height, flags) {
     if (!equation || equation.trim().length === 0)
         return writeError(identifier, 'Equation is empty')
 
-    width *= imageScale;
-    height *= imageScale;
-
-    const equation_key = `${equation}_${width}x${height}`;
+    const equation_key = `${equation}_${cWidth}*${width}x${cHeight}*${height}_${flags}`;
     if (equation_key in equationMap) {
         const equationObj = equationMap[equation_key];
-        return write(identifier, equationObj.filename);
+        return write(identifier, equationObj.width, equationObj.height, equationObj.filename);
     }
 
     let {svg, error} = await equationToSVG(equation);
     if (!svg)
         return writeError(identifier, error)
-    svg = svg.replace(/currentColor/g, fgColor);
+
+    svg = svg
+        .replace(/currentColor/g, fgColor)
+        .replace(/style="[^"]+"/, '')
+
+    const isDynamic = !!(flags & 1);
+
+    let density = null;
+    if (isDynamic) {
+        // We want to obtain SVG dimensions, we can't rely on viewBox, since for some reason the image 
+        // may be cropped, so we are going to use `identify` to get the image size.
+        // Also this should be fast, since we can use `identify ping` to get the image without loading it.
+        // TODO: Is this fast in ImageMagick v6 too?
+        // TODO: Is there a better solution?
+        density = 10 * dynamicScale * cHeight * internalScale;
+
+        let svgWidth, svgHeight;
+        try {
+            const {width, height} = await svgDimensions(svg, {density: density});
+            svgWidth = width;
+            svgHeight = height;
+        } catch (err) {
+            return writeError(identifier, 'svgDimensions: ' + err.message);
+        }
+
+        const newWidth = (svgWidth / internalScale) / cWidth;
+        const newHeight = (svgHeight / internalScale) / cHeight;
+
+        // If the image is smaller than the cell, it's better to keep the original size, so
+        // ImageMagick can center it properly.
+        width = Math.max(width, Math.ceil(newWidth));
+        height = Math.max(height, Math.ceil(newHeight));
+    }
 
     const hash = sha256Hash(equation).slice(0, 7);
 
-    const filename = `${IMG_DIR}/${hash}_${width}x${height}.png`;
+    const iWidth = width * cWidth * internalScale;
+    const iHeight = height * cHeight * internalScale;
+    
+    const isCenter = !!(flags & 2);
+    const filename = `${IMG_DIR}/${hash}_${iWidth}x${iHeight}.png`;
+
     try {
-        await svg2png(svg, filename, width, height, center);
+        await svg2png(svg, filename, iWidth, iHeight, {
+            resize: !isDynamic,
+            center: isCenter,
+            density: density,
+        });
     } catch (err) {
-        return writeError(identifier, 'System: ' + err.message);
+        return writeError(identifier, 'svg2png: ' + err.message);
     }
 
-    const equationObj = {equation, filename};
+    const equationObj = {equation, filename, width, height};
     equations.push(equationObj);
     equationMap[equation_key] = equationObj;
 
-    write(identifier, filename);
+    write(identifier, width, height, filename);
 }
 
 function processAll(request) {
     if (request.type === 'request') {
         return processEquation(
             request.identifier,
+            request.data,
+            request.cellWidth,
+            request.cellHeight,
             request.width,
             request.height,
-            request.center,
-            request.data
-        );
+            request.flags
+        );                                                                                                                                                               
     } else if (request.type === 'fgcolor') {
         // FIXME: Invalidate cache when color changes
         fgColor = request.color;
-    } else if (request.type === 'scale') {
-        imageScale = request.scale;
+    } else if (request.type === 'dscale') {
+        // FIXME: Invalidate cache when scale changes
+        dynamicScale = request.scale;
+    } else if (request.type === 'iscale') {
+        // FIXME: Invalidate cache when scale changes
+        internalScale = request.scale;
     }
 }
 

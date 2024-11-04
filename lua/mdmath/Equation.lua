@@ -7,6 +7,7 @@ local Processor = require'mdmath.Processor'
 local Image = require'mdmath.Image'
 local tracker = require'mdmath.tracker'
 local terminfo = require'mdmath.terminfo'
+local config = require'mdmath.config'.opts
 
 local Equation = util.class 'Equation'
 
@@ -31,26 +32,38 @@ function Equation:_create(res, err)
         return
     end
 
-    local filename = res
+    local filename = res.data
+
+    local width = res.width
+    local height = res.height
 
     -- Multiline equations
     if self.lines then
-        local width = self.width
-        local height = #self.lines
-
         local image = Image.new(height, width, filename)
         local texts = image:text()
         local color = image:color()
 
-        -- Increase text width to match the original width
-        local padding_len = self.width > width and self.width - width or 0
-        local padding = (' '):rep(padding_len)
+        local nlines = #self.lines
 
         local lines = {}
         for i, text in ipairs(texts) do
-            local rtext = text .. padding
+            if i <= nlines then
+                -- Increase text width to match the original width.
+                local padding = self.lines_width[i] - width
+                local rtext = padding > 0
+                    and text .. (' '):rep(padding)
+                    or text
 
-            lines[i] = { rtext, self.lines[i]:len() }
+                lines[i] = { rtext, self.lines[i]:len() }
+            else
+                -- add virtual lines
+                lines[i] = { text, -1 }
+            end
+        end
+
+        for i = #texts + 1, nlines do 
+            local padding = self.lines_width[i]
+            lines[i] = { (' '):rep(padding), self.lines[i]:len() }
         end
 
         vim.schedule(function()
@@ -67,7 +80,7 @@ function Equation:_create(res, err)
             end
         end)
     else
-        local image = Image.new(1, self.width, filename)
+        local image = Image.new(height, width, filename)
         local text = image:text()[1]
         local color = image:color()
 
@@ -96,15 +109,20 @@ function Equation:_init(bufnr, row, col, text)
         end
 
         local width = 0
+        local lines_width = {}
         for i, line in ipairs(lines) do
-            width = math.max(width, util.strwidth(line))
+            local w = util.strwidth(line)
+            width = math.max(width, w)
+            lines_width[i] = w
         end
         self.lines = lines
+        self.lines_width = lines_width
         self.width = width
     elseif util.linewidth(bufnr, row) == text:len() then
         -- Treat single line equations as a special case
         self.width = util.strwidth(text)
         self.lines = { text }
+        self.lines_width = { self.width }
     end
 
     self.bufnr = bufnr
@@ -126,13 +144,21 @@ function Equation:_init(bufnr, row, col, text)
 
     local cell_width, cell_height = terminfo.cell_size()
 
-    -- dynamic size for multiline equations
-    -- FIXME: dynamic size is not implemented yet in the JS side
-    local img_width = self.lines and (self.width * cell_width) or (self.width * cell_width)
-    local img_height = (self.lines and #self.lines or 1) * cell_height
+    local flags, height
+    if self.lines then
+        height = #self.lines
+        if config.dynamic then
+            flags = 1 -- dynamic
+        else
+            flags = 0
+        end
+    else
+        height = 1
+        flags = 2 -- centered
+    end
 
     local processor = Processor.from_bufnr(bufnr)
-    processor:request(self.equation, img_width, img_height, not self.lines, function(res, err)
+    processor:request(self.equation, cell_width, cell_height, self.width, height, flags, function(res, err)
         if self.valid then
             self:_create(res, err)
         end

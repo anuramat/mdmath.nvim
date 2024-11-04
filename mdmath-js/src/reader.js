@@ -23,36 +23,32 @@ const reader = {}
 
 reader.listen = function(callback) {
     const stream = makeAsyncStream(process.stdin, ':');
-    let identifier;
-    let width;
-    let height;
-    let center;
-    let length;
 
     async function loop() {
         while (await stream.waitReadable()) {
             const identifier = await stream.readString();
             const type = await stream.readString();
             if (type == 'request') {
+                // TODO: Flags should be a enum
+                const flags = await stream.readInt();
+
+                const cellWidth = await stream.readInt();
                 const width = await stream.readInt();
 
+                const cellHeight = await stream.readInt();
                 const height = await stream.readInt();
 
-                const center_ = await stream.readString();
-                if (center_ !== 'true' && center_ !== 'false') 
-                    response_fail(`Invalid center: ${center_}`);
-                const center = center_ === 'true';
-
                 const length = await stream.readInt();
-
                 const data = await stream.readFixedString(length);
 
                 const response = {
                     identifier,
                     type,
+                    cellWidth,
+                    cellHeight,
                     width,
                     height,
-                    center,
+                    flags,
                     data
                 };
                 callback(response);
@@ -67,7 +63,7 @@ reader.listen = function(callback) {
                     color
                 };
                 callback(response);
-            } else if(type == 'scale') {
+            } else if(type == 'iscale' || type == 'dscale') {
                 const scale = await stream.readFloat();
 
                 const response = {

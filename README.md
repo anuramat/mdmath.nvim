@@ -62,11 +62,17 @@ opts = {
     anticonceal = true,
     -- Hide the text when in the Insert Mode.
     hide_on_insert = true,
-    -- Scale of the equation images, increase to prevent blurry images when increasing terminal
-    -- font, high values may produce aliased images.
-    scale = 1.0,
-}
+    -- Enable dynamic size for non-inline equations.
+    dynamic = true,
+    -- Configure the scale of dynamic-rendered equations.
+    dynamic_scale = 1.0,
 
+    -- Internal scale of the equation images, increase to prevent blurry images when increasing terminal
+    -- font, high values may produce aliased images.
+    -- WARNING: This do not affect how the images are displayed, only how many pixels are used to render them.
+    --          See `dynamic_scale` to modify the displayed size.
+    internal_scale = 1.0,
+}
 ```
 
 ## Usage
@@ -84,7 +90,7 @@ The plugin is currently at alpha, many features are planned for the next version
   - [ ] An API to generate equation images.
   - [ ] Render in floating windows
   - [ ] Render out-of-line
-  - [ ] Dynamic width and height
+  - [x] Dynamic width and height
   - [ ] Improve scale of images (may need to work with Kitty for this one)
   - [ ] Refactoring: LuaCATS annotations
   - [ ] Documentation
