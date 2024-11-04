@@ -62,11 +62,17 @@ opts = {
     anticonceal = true,
     -- Hide the text when in the Insert Mode.
     hide_on_insert = true,
-    -- Scale of the equation images, increase to prevent blurry images when increasing terminal
-    -- font, high values may produce aliased images.
-    scale = 1.0,
-}
+    -- Enable dynamic size for non-inline equations.
+    dynamic = true,
+    -- Configure the scale of dynamic-rendered equations.
+    dynamic_scale = 1.0,
 
+    -- Internal scale of the equation images, increase to prevent blurry images when increasing terminal
+    -- font, high values may produce aliased images.
+    -- WARNING: This do not affect how the images are displayed, only how many pixels are used to render them.
+    --          See `dynamic_scale` to modify the displayed size.
+    internal_scale = 1.0,
+}
 ```
 
 ## Usage
