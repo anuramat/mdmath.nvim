@@ -46,19 +46,20 @@ function Equation:_create(res, err)
         local padding_len = self.width > width and self.width - width or 0
         local padding = (' '):rep(padding_len)
 
+        local nlines = #self.lines
+
         local lines = {}
         for i, text in ipairs(texts) do
             local rtext = text .. padding
 
-            lines[i] = { rtext, self.lines[i]:len() }
+            -- add virtual lines
+            local len = i <= nlines
+                and self.lines[i]:len()
+                or -1
+
+            lines[i] = { rtext, len }
         end
 
-        if height > #self.lines then
-            for i = #self.lines + 1, height do
-                lines[i] = { padding, -1 } -- -1 means virtual line
-            end
-        end
-        lines[#lines + 1] = { 'teste', -1 } 
 
         vim.schedule(function()
             if self.valid then

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import mathjax from 'mathjax';
 import reader from './reader.js';
-import { svg2png } from './magick.js';
+import { svgDimensions, svg2png } from './magick.js';
 
 import { exec } from 'node:child_process';
 import { sha256Hash } from './util.js';
@@ -26,7 +26,9 @@ const svgCache = {};
 
 let fgColor = '#ff00ff';
 
-let imageScale = 1;
+let internalScale = 1;
+
+const imgRatio = 0.1
 
 let MathJax = undefined;
 
@@ -91,6 +93,26 @@ function writeError(identifier, error) {
     process.stdout.write(`${identifier}:error:0:0:${error.length}:${error}`);
 }
 
+function parseViewbox(svgString) {
+    const viewboxMatch = svgString.match(/viewBox="([^"]+)"/);
+    if (!viewboxMatch) return null;
+
+    const [minX, minY, width, height] = viewboxMatch[1].split(' ').map(parseFloat);
+    return { minX, minY, width, height };
+}
+
+async function saveFile(filename, data) {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(filename, data, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve();
+            }
+        });
+    });
+}
+
 /**
   * @param {string} identifier
   * @param {string} equation
@@ -108,18 +130,49 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
     let {svg, error} = await equationToSVG(equation);
     if (!svg)
         return writeError(identifier, error)
-    svg = svg.replace(/currentColor/g, fgColor);
+
+    svg = svg
+        .replace(/currentColor/g, fgColor)
+        .replace(/style="[^"]+"/, '')
+
+    const isDynamic = !!(flags & 1);
+
+    let density = null;
+    if (isDynamic) {
+        // We want to obtain SVG dimensions, we can't rely on viewBox, since for some reason the image 
+        // may be cropped, so we are going to use `identify` to get the image size.
+        // Also this should be fast, since we can use `identify ping` to get the image without loading it.
+        // TODO: Is this fast in ImageMagick v6 too?
+        // TODO: Is there a better solution?
+        const constant = 10;
+
+        density = constant * cHeight * internalScale;
+        const {width: svgWidth, height: svgHeight} = await svgDimensions(svg, {density: density});
+
+        const newWidth = (svgWidth / internalScale) / cWidth;
+        const newHeight = (svgHeight / internalScale) / cHeight;
+        
+        width = Math.ceil(newWidth);
+        height = Math.ceil(newHeight);
+
+        sendNotification(`SVG width: ${svgWidth}, SVG height: ${svgHeight}`);
+    }
 
     const hash = sha256Hash(equation).slice(0, 7);
 
-    const iWidth = width * cWidth * imageScale;
-    const iHeight = height * cHeight * imageScale;
+    const iWidth = width * cWidth * internalScale;
+    const iHeight = height * cHeight * internalScale;
     
-    const center = !!(flags & 2)
+    const isCenter = !!(flags & 2);
     const filename = `${IMG_DIR}/${hash}_${iWidth}x${iHeight}.png`;
 
     try {
-        await svg2png(svg, filename, iWidth, iHeight, center);
+        await svg2png(svg, filename, iWidth, iHeight, {
+            resize: true,
+            resize: !isDynamic,
+            center: isCenter,
+            density: density,
+        });
     } catch (err) {
         return writeError(identifier, 'System: ' + err.message);
     }
@@ -141,13 +194,14 @@ function processAll(request) {
             request.width,
             request.height,
             request.flags
-        );
+        );                                                                                                                                                               
+  7         // TODO: Display a warning if dimensions ar
     } else if (request.type === 'fgcolor') {
         // FIXME: Invalidate cache when color changes
         fgColor = request.color;
     } else if (request.type === 'scale') {
         // FIXME: Invalidate cache when scale changes
-        imageScale = request.scale;
+        internalScale = request.scale;
     }
 }
 
