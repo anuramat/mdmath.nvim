@@ -145,7 +145,14 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
         // TODO: Is there a better solution?
         density = 10 * dynamicScale * cHeight * internalScale;
 
-        const {width: svgWidth, height: svgHeight} = await svgDimensions(svg, {density: density});
+        let svgWidth, svgHeight;
+        try {
+            const {width, height} = await svgDimensions(svg, {density: density});
+            svgWidth = width;
+            svgHeight = height;
+        } catch (err) {
+            return writeError(identifier, 'svgDimensions: ' + err.message);
+        }
 
         const newWidth = (svgWidth / internalScale) / cWidth;
         const newHeight = (svgHeight / internalScale) / cHeight;
@@ -172,7 +179,7 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
             density: density,
         });
     } catch (err) {
-        return writeError(identifier, 'System: ' + err.message);
+        return writeError(identifier, 'svg2png: ' + err.message);
     }
 
     const equationObj = {equation, filename, width, height};

@@ -74,19 +74,20 @@ const magickBinary = new Promise(async (resolve) => {
 export async function svgDimensions(svg, {density} = {}) {
     const magick = await magickBinary;
 
-    const args = ['-ping'];
+    const args = [];
+    if (magick.isV7)
+        args.push('identify')
+    args.push('-ping');
     if (density)
         args.push('-density', density);
     args.push('-format', '%w %h');
     args.push('svg:-');
-    if (magick.isV7)
-        args.unshift('identify');
 
     return new Promise((resolve, reject) => {
         const identify = spawn(magick.identify, args);
         let data = '';
         identify.stdout.on('data', (chunk) => data += chunk);
-        identify.on('exit', (code) => {
+        identify.on('close', (code) => {
             // TODO: improve error handling
             if (code !== 0)
                 return reject(new Error(`identify exited with code ${code}`));
@@ -131,10 +132,11 @@ export async function svg2png(svg, filename, width, height, flags) {
     const magick = await magickBinary;
     return new Promise((resolve, reject) => {
         const convert = spawn(magick.convert, args);
-        convert.on('exit', (code) => {
-            // TODO: improve error handling
+        let stderr = '';
+        convert.stderr.on('data', (chunk) => stderr += chunk);
+        convert.on('close', (code) => {
             if (code !== 0)
-                return reject(new Error(`convert exited with code ${code}`));
+                return reject(new Error(`${stderr}`));
 
             resolve({width, height});
         });
