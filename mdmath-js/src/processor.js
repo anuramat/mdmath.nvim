@@ -27,8 +27,7 @@ const svgCache = {};
 let fgColor = '#ff00ff';
 
 let internalScale = 1;
-
-const imgRatio = 0.1
+let dynamicScale = 1;
 
 let MathJax = undefined;
 
@@ -144,9 +143,8 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
         // Also this should be fast, since we can use `identify ping` to get the image without loading it.
         // TODO: Is this fast in ImageMagick v6 too?
         // TODO: Is there a better solution?
-        const constant = 10;
+        density = 10 * dynamicScale * cHeight * internalScale;
 
-        density = constant * cHeight * internalScale;
         const {width: svgWidth, height: svgHeight} = await svgDimensions(svg, {density: density});
 
         const newWidth = (svgWidth / internalScale) / cWidth;
@@ -193,11 +191,13 @@ function processAll(request) {
             request.height,
             request.flags
         );                                                                                                                                                               
-  7         // TODO: Display a warning if dimensions ar
     } else if (request.type === 'fgcolor') {
         // FIXME: Invalidate cache when color changes
         fgColor = request.color;
-    } else if (request.type === 'scale') {
+    } else if (request.type === 'dscale') {
+        // FIXME: Invalidate cache when scale changes
+        dynamicScale = request.scale;
+    } else if (request.type === 'iscale') {
         // FIXME: Invalidate cache when scale changes
         internalScale = request.scale;
     }

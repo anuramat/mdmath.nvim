@@ -63,7 +63,7 @@ reader.listen = function(callback) {
                     color
                 };
                 callback(response);
-            } else if(type == 'scale') {
+            } else if(type == 'iscale' || type == 'dscale') {
                 const scale = await stream.readFloat();
 
                 const response = {

@@ -62,9 +62,14 @@ function Processor:setForeground(color)
     self:_assert(not err, 'failed to set foreground: ', err)
 end
 
-function Processor:setScale(scale)
-    local code, err = self.pipes[0]:write(string.format("0:scale:%.2f:", scale))
-    self:_assert(not err, 'failed to set scale: ', err)
+function Processor:setInternalScale(scale)
+    local code, err = self.pipes[0]:write(string.format("0:iscale:%.2f:", scale))
+    self:_assert(not err, 'failed to set internal scale: ', err)
+end
+
+function Processor:setDynamicScale(scale)
+    local code, err = self.pipes[0]:write(string.format("0:dscale:%.2f:", scale))
+    self:_assert(not err, 'failed to set dynamic scale: ', err)
 end
 
 function Processor:request(data, cell_width, cell_height, width, height, flags, callback)
@@ -214,7 +219,8 @@ function Processor:_init()
     self:_listen()
 
     self:setForeground(config.foreground)
-    self:setScale(config.scale)
+    self:setInternalScale(config.internal_scale)
+    self:setDynamicScale(config.dynamic_scale)
 end
 
 function Processor:close()
