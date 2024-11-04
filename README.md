@@ -90,7 +90,7 @@ The plugin is currently at alpha, many features are planned for the next version
   - [ ] An API to generate equation images.
   - [ ] Render in floating windows
   - [ ] Render out-of-line
-  - [ ] Dynamic width and height
+  - [x] Dynamic width and height
   - [ ] Improve scale of images (may need to work with Kitty for this one)
   - [ ] Refactoring: LuaCATS annotations
   - [ ] Documentation
