@@ -150,8 +150,10 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
         const newWidth = (svgWidth / internalScale) / cWidth;
         const newHeight = (svgHeight / internalScale) / cHeight;
 
-        width = Math.ceil(newWidth);
-        height = Math.ceil(newHeight);
+        // If the image is smaller than the cell, it's better to keep the original size, so
+        // ImageMagick can center it properly.
+        width = Math.max(width, Math.ceil(newWidth));
+        height = Math.max(height, Math.ceil(newHeight));
     }
 
     const hash = sha256Hash(equation).slice(0, 7);

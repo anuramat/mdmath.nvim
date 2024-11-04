@@ -42,22 +42,27 @@ function Equation:_create(res, err)
         local texts = image:text()
         local color = image:color()
 
-        -- Increase text width to match the original width
-        local padding_len = self.width > width and self.width - width or 0
-        local padding = (' '):rep(padding_len)
-
         local nlines = #self.lines
 
         local lines = {}
         for i, text in ipairs(texts) do
-            local rtext = text .. padding
+            if i <= nlines then
+                -- Increase text width to match the original width.
+                local padding = self.lines_width[i] - width
+                local rtext = padding > 0
+                    and text .. (' '):rep(padding)
+                    or text
 
-            -- add virtual lines
-            local len = i <= nlines
-                and self.lines[i]:len()
-                or -1
+                lines[i] = { rtext, self.lines[i]:len() }
+            else
+                -- add virtual lines
+                lines[i] = { text, -1 }
+            end
+        end
 
-            lines[i] = { rtext, len }
+        for i = #texts + 1, nlines do 
+            local padding = self.lines_width[i]
+            lines[i] = { (' '):rep(padding), self.lines[i]:len() }
         end
 
         vim.schedule(function()
@@ -103,15 +108,20 @@ function Equation:_init(bufnr, row, col, text)
         end
 
         local width = 0
+        local lines_width = {}
         for i, line in ipairs(lines) do
-            width = math.max(width, util.strwidth(line))
+            local w = util.strwidth(line)
+            width = math.max(width, w)
+            lines_width[i] = w
         end
         self.lines = lines
+        self.lines_width = lines_width
         self.width = width
     elseif util.linewidth(bufnr, row) == text:len() then
         -- Treat single line equations as a special case
         self.width = util.strwidth(text)
         self.lines = { text }
+        self.lines_width = { self.width }
     end
 
     self.bufnr = bufnr
