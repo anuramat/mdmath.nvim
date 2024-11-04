@@ -227,21 +227,29 @@ end
 local function opts2extmark(opts, row, col)
     if opts.lines then
         local extmarks = {}
+
+        local is_last_virtual = false
         for _, line in ipairs(opts.lines) do
+            local row_data = { { line[1], opts.color } }
             if line[2] < 0 then
-                local data = {
-                    virt_lines = { { { line[1], opts.color } } },
-                    ephemeral = false,
-                    undo_restore = false,
-                }
-                table.insert(extmarks, {
-                    data = data,
-                    row = row - 1,
-                    col = col,
-                })
+                if not is_last_virtual then
+                    local data = {
+                        virt_lines = { row_data },
+                        ephemeral = false,
+                        undo_restore = false,
+                    }
+                    table.insert(extmarks, {
+                        data = data,
+                        row = row - 1,
+                        col = col,
+                    })
+                else -- If the last line was virtual, just merge with it.
+                    table.insert(extmarks[#extmarks].data.virt_lines, row_data)
+                end
+                is_last_virtual = true
             else
                 local data = {
-                    virt_text = { { line[1], opts.color } },
+                    virt_text = row_data,
                     virt_text_pos = 'overlay',
                     virt_text_hide = true,
                     ephemeral = false,
@@ -253,6 +261,7 @@ local function opts2extmark(opts, row, col)
                     col = col,
                 })
                 row = row + 1
+                is_last_virtual = false
             end
             col = 0 -- reset col for next line
         end

@@ -151,11 +151,9 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
 
         const newWidth = (svgWidth / internalScale) / cWidth;
         const newHeight = (svgHeight / internalScale) / cHeight;
-        
+
         width = Math.ceil(newWidth);
         height = Math.ceil(newHeight);
-
-        sendNotification(`SVG width: ${svgWidth}, SVG height: ${svgHeight}`);
     }
 
     const hash = sha256Hash(equation).slice(0, 7);

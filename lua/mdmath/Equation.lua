@@ -60,7 +60,6 @@ function Equation:_create(res, err)
             lines[i] = { rtext, len }
         end
 
-
         vim.schedule(function()
             if self.valid then
                 self.mark_id = marks.add(self.bufnr, self.pos[1], self.pos[2], {
