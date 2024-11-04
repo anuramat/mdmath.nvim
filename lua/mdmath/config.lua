@@ -67,6 +67,13 @@ function M.validate()
         end,
     })
 
+    if opts.scale then
+        vim.schedule(function()
+            vim.notify('mdmath.nvim: `scale` option was removed, check `dynamic_scale` and `internal_scale`.', vim.log.levels.WARN)
+        end)
+        opts.dynamic_scale = opts.scale
+    end
+
     M.validated = true
     rawset(M, 'opts', opts)
 end
