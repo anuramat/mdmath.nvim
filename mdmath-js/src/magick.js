@@ -118,7 +118,7 @@ export async function svg2png(svg, filename, width, height, flags) {
 
     const args = ['-background', 'none'];
     if (flags.resize)
-        args.push('-size', flags.size);
+        args.push('-size', size);
     if (flags.density)
         args.push('-density', flags.density);
     args.push('svg:-');

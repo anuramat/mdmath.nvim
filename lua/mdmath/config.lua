@@ -57,6 +57,9 @@ function M.validate()
         foreground = {opts.foreground, 'string'},
         anticonceal = {opts.anticonceal, 'boolean'},
         hide_on_insert = {opts.hide_on_insert, 'boolean'},
+        dynamic = {opts.dynamic, 'boolean'},
+        dynamic_scale = {opts.dynamic_scale, 'number'},
+        internal_scale = {opts.internal_scale, 'number'},
     }
 
     opts.foreground = require'mdmath.util'.hl_as_hex(opts.foreground)
@@ -71,7 +74,6 @@ function M.validate()
         vim.schedule(function()
             vim.notify('mdmath.nvim: `scale` option was removed, check `dynamic_scale` and `internal_scale`.', vim.log.levels.WARN)
         end)
-        opts.dynamic_scale = opts.scale
     end
 
     M.validated = true

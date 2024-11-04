@@ -173,7 +173,6 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
 
     try {
         await svg2png(svg, filename, iWidth, iHeight, {
-            resize: true,
             resize: !isDynamic,
             center: isCenter,
             density: density,

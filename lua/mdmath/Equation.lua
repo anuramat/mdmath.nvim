@@ -7,6 +7,7 @@ local Processor = require'mdmath.Processor'
 local Image = require'mdmath.Image'
 local tracker = require'mdmath.tracker'
 local terminfo = require'mdmath.terminfo'
+local config = require'mdmath.config'.opts
 
 local Equation = util.class 'Equation'
 
@@ -146,7 +147,11 @@ function Equation:_init(bufnr, row, col, text)
     local flags, height
     if self.lines then
         height = #self.lines
-        flags = 1 -- dynamic
+        if config.dynamic then
+            flags = 1 -- dynamic
+        else
+            flags = 0
+        end
     else
         height = 1
         flags = 2 -- centered
