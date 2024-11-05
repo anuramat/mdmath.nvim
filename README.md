@@ -92,7 +92,6 @@ The plugin is currently at alpha, many features are planned for the next version
   - [ ] Render in floating windows
   - [ ] Render out-of-line
   - [x] Dynamic width and height
-  - [ ] Improve scale of images (may need to work with Kitty for this one)
   - [ ] Refactoring: LuaCATS annotations
   - [ ] Documentation
   - [ ] `:checkhealth`
