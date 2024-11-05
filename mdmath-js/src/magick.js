@@ -33,7 +33,7 @@ async function findBinary(name) {
 const rsvgBinary = new Promise(async (resolve) => {
     const rsvg = await findBinary('rsvg-convert');
     if (rsvg === null) {
-        console.error('Failed to find rsvg-convert');
+        console.error('Failed to find rsvg-convert! Make sure to have it properly installed.');
         process.exit(1);
     }
     return resolve(rsvg);
