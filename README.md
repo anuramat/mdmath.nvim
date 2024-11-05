@@ -12,6 +12,7 @@ https://github.com/user-attachments/assets/bcfab0d2-60fb-4e8a-9402-2be62a5504f6
   - NodeJS
   - `npm`
   - ImageMagick v6/v7
+  - `rsvg-convert` (from librsvg)
   - Linux/MacOS (not tested in MacOS, please open an issue if you are able to test it)
 
 You also need a terminal emulator that supports [Kitty Graphics Protocol#Unicode Placeholders](https://sw.kovidgoyal.net/kitty/graphics-protocol/#unicode-placeholders), the following terminals were tested.
