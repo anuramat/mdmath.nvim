@@ -1,17 +1,6 @@
 import { exec } from 'node:child_process';
 import { makeAsyncStream } from './async_stream.js';
 
-function sendNotification(message) {
-    exec(`notify-send '${message}'`, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error: ${error.message}`);
-        }
-        if (stderr) {
-            console.error(`Stderr: ${stderr}`);
-        }
-    });
-}
-
 // FIXME: This should not be a fatal error, instead send a response
 // to the client with the error message.
 function response_fail(message) {

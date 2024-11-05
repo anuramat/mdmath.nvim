@@ -1,9 +1,8 @@
 import fs from 'fs';
 import mathjax from 'mathjax';
 import reader from './reader.js';
-import { svgDimensions, svg2png } from './magick.js';
-
-import { exec } from 'node:child_process';
+import { pngDimensions, pngFitTo, rsvgConvert } from './magick.js';
+import { sendNotification, saveFile } from './debug.js';
 import { sha256Hash } from './util.js';
 import { randomBytes } from 'node:crypto';
 import { onExit } from './onexit.js';
@@ -31,17 +30,6 @@ let dynamicScale = 1;
 
 let MathJax = undefined;
 
-function sendNotification(message) {
-    exec(`notify-send "Processor.js" '${message}'`, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`Error: ${error.message}`);
-        }
-        if (stderr) {
-            console.error(`Stderr: ${stderr}`);
-        }
-    });
-}
-
 class MathError extends Error {
     constructor(message) {
         super(message);
@@ -53,7 +41,7 @@ function mkdirSync(path) {
     try {
         fs.mkdirSync(path, { recursive: true });
     } catch (err) {
-        if (err.code !== 'EEXIST') 
+        if (err.code !== 'EEXIST')
             throw err;
     }
 }
@@ -100,25 +88,13 @@ function parseViewbox(svgString) {
     return { minX, minY, width, height };
 }
 
-async function saveFile(filename, data) {
-    return new Promise((resolve, reject) => {
-        fs.writeFile(filename, data, (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
 /**
   * @param {string} identifier
   * @param {string} equation
 */
 async function processEquation(identifier, equation, cWidth, cHeight, width, height, flags) {
     if (!equation || equation.trim().length === 0)
-        return writeError(identifier, 'Equation is empty')
+        return writeError(identifier, 'Empty equation')
 
     const equation_key = `${equation}_${cWidth}*${width}x${cHeight}*${height}_${flags}`;
     if (equation_key in equationMap) {
@@ -136,50 +112,35 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
 
     const isDynamic = !!(flags & 1);
 
-    let density = null;
+    let basePNG;
+    let iWidth, iHeight;
     if (isDynamic) {
-        // We want to obtain SVG dimensions, we can't rely on viewBox, since for some reason the image 
-        // may be cropped, so we are going to use `identify` to get the image size.
-        // Also this should be fast, since we can use `identify ping` to get the image without loading it.
-        // TODO: Is this fast in ImageMagick v6 too?
-        // TODO: Is there a better solution?
-        density = 10 * dynamicScale * cHeight * internalScale;
+        const zoom = 10 * dynamicScale * cHeight * internalScale / 96;
+        basePNG = await rsvgConvert(svg, {zoom});
 
-        let svgWidth, svgHeight;
-        try {
-            const {width, height} = await svgDimensions(svg, {density: density});
-            svgWidth = width;
-            svgHeight = height;
-        } catch (err) {
-            return writeError(identifier, 'svgDimensions: ' + err.message);
-        }
+        const {width: pngWidth, height: pngHeight} = await pngDimensions(basePNG);
 
-        const newWidth = (svgWidth / internalScale) / cWidth;
-        const newHeight = (svgHeight / internalScale) / cHeight;
+        const newWidth = (pngWidth / internalScale) / cWidth;
+        const newHeight = (pngHeight / internalScale) / cHeight;
 
         // If the image is smaller than the cell, it's better to keep the original size, so
-        // ImageMagick can center it properly.
         width = Math.max(width, Math.ceil(newWidth));
         height = Math.max(height, Math.ceil(newHeight));
+
+        iWidth = width * cWidth * internalScale;
+        iHeight = height * cHeight * internalScale;
+    } else {
+        iWidth = width * cWidth * internalScale;
+        iHeight = height * cHeight * internalScale;
+
+        basePNG = await rsvgConvert(svg, {width: iWidth, height: iHeight});
     }
 
     const hash = sha256Hash(equation).slice(0, 7);
-
-    const iWidth = width * cWidth * internalScale;
-    const iHeight = height * cHeight * internalScale;
-    
     const isCenter = !!(flags & 2);
     const filename = `${IMG_DIR}/${hash}_${iWidth}x${iHeight}.png`;
 
-    try {
-        await svg2png(svg, filename, iWidth, iHeight, {
-            resize: !isDynamic,
-            center: isCenter,
-            density: density,
-        });
-    } catch (err) {
-        return writeError(identifier, 'svg2png: ' + err.message);
-    }
+    await pngFitTo(basePNG, filename, iWidth, iHeight, {center: isCenter});
 
     const equationObj = {equation, filename, width, height};
     equations.push(equationObj);
@@ -198,7 +159,9 @@ function processAll(request) {
             request.width,
             request.height,
             request.flags
-        );                                                                                                                                                               
+        ).catch((err) => {
+            writeError(request.identifier, err.message);
+        });
     } else if (request.type === 'fgcolor') {
         // FIXME: Invalidate cache when color changes
         fgColor = request.color;
