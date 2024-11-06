@@ -53,21 +53,21 @@ function M.enable(bufnr)
     if not M.is_loaded then
         M.setup(false)
     end
-    require 'mdmath.manager'.enable(bufnr or 0)
+    require 'mdmath.overlay'.enable(bufnr or 0)
 end
 
 function M.disable(bufnr)
     if not M.is_loaded then
         M.setup(false)
     end
-    require 'mdmath.manager'.disable(bufnr or 0)
+    require 'mdmath.overlay'.disable(bufnr or 0)
 end
 
 function M.clear(bufnr)
     if not M.is_loaded then
         M.setup(false)
     end
-    require 'mdmath.manager'.clear(bufnr or 0)
+    require 'mdmath.overlay'.clear(bufnr or 0)
 end
 
 function M.build()
