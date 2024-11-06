@@ -23,8 +23,6 @@ const equationMap = {};
 
 const svgCache = {};
 
-let fgColor = '#ff00ff';
-
 let internalScale = 1;
 let dynamicScale = 1;
 
@@ -92,11 +90,11 @@ function parseViewbox(svgString) {
   * @param {string} identifier
   * @param {string} equation
 */
-async function processEquation(identifier, equation, cWidth, cHeight, width, height, flags) {
+async function processEquation(identifier, equation, cWidth, cHeight, width, height, flags, color) {
     if (!equation || equation.trim().length === 0)
         return writeError(identifier, 'Empty equation')
 
-    const equation_key = `${equation}_${cWidth}*${width}x${cHeight}*${height}_${flags}`;
+    const equation_key = `${equation}_${cWidth}*${width}x${cHeight}*${height}_${flags}_${color}`;
     if (equation_key in equationMap) {
         const equationObj = equationMap[equation_key];
         return write(identifier, equationObj.width, equationObj.height, equationObj.filename);
@@ -107,7 +105,7 @@ async function processEquation(identifier, equation, cWidth, cHeight, width, hei
         return writeError(identifier, error)
 
     svg = svg
-        .replace(/currentColor/g, fgColor)
+        .replace(/currentColor/g, color)
         .replace(/style="[^"]+"/, '')
 
     const isDynamic = !!(flags & 1);
@@ -158,13 +156,11 @@ function processAll(request) {
             request.cellHeight,
             request.width,
             request.height,
-            request.flags
+            request.flags,
+            request.color
         ).catch((err) => {
             writeError(request.identifier, err.message);
         });
-    } else if (request.type === 'fgcolor') {
-        // FIXME: Invalidate cache when color changes
-        fgColor = request.color;
     } else if (request.type === 'dscale') {
         // FIXME: Invalidate cache when scale changes
         dynamicScale = request.scale;

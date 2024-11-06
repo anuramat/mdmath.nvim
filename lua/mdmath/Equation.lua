@@ -100,7 +100,9 @@ function Equation:_create(res, err)
     end
 end
 
-function Equation:_init(bufnr, row, col, text)
+function Equation:_init(bufnr, row, col, text, opts)
+    local color = opts and opts.color or config.foreground
+
     if text:find('\n') then
         local lines = vim.split(text, '\n')
         -- Only support rectangular equations
@@ -138,6 +140,7 @@ function Equation:_init(bufnr, row, col, text)
     end
     self.created = false
     self.valid = true
+    self.color = color
     
     -- remove trailing '$'
     self.equation = text:gsub('^%$*(.-)%$*$', '%1')
@@ -158,7 +161,7 @@ function Equation:_init(bufnr, row, col, text)
     end
 
     local processor = Processor.from_bufnr(bufnr)
-    processor:request(self.equation, cell_width, cell_height, self.width, height, flags, function(res, err)
+    processor:request(self.equation, cell_width, cell_height, self.width, height, flags, color, function(res, err)
         if self.valid then
             self:_create(res, err)
         end

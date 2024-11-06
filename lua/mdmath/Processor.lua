@@ -51,16 +51,16 @@ function Processor:_on_data(identifier, data_type, width, height, data)
     end
 end
 
-function Processor:setForeground(color)
-    if type(color) == 'number' then
-        color = string.format('#%06x', color)
-    elseif type(color) ~= 'string' then
-        error('color: expected string|number, got ' .. type(color))
-    end
+-- function Processor:setForeground(color)
+--     if type(color) == 'number' then
+--         color = string.format('#%06x', color)
+--     elseif type(color) ~= 'string' then
+--         error('color: expected string|number, got ' .. type(color))
+--     end
 
-    local code, err = self.pipes[0]:write(string.format("0:fgcolor:%s:", color))
-    self:_assert(not err, 'failed to set foreground: ', err)
-end
+--     local code, err = self.pipes[0]:write(string.format("0:fgcolor:%s:", color))
+--     self:_assert(not err, 'failed to set foreground: ', err)
+-- end
 
 function Processor:setInternalScale(scale)
     local code, err = self.pipes[0]:write(string.format("0:iscale:%.2f:", scale))
@@ -72,7 +72,7 @@ function Processor:setDynamicScale(scale)
     self:_assert(not err, 'failed to set dynamic scale: ', err)
 end
 
-function Processor:request(data, cell_width, cell_height, width, height, flags, callback)
+function Processor:request(data, cell_width, cell_height, width, height, flags, color, callback)
     -- width/height should be number of cells
     -- flags: 0: none, 1: dynamic, 2: center, 3: dynamic + center
     --        TODO: flags should be a enum
@@ -83,7 +83,10 @@ function Processor:request(data, cell_width, cell_height, width, height, flags, 
     end
     self.callbacks[identifier] = callback
 
-    local code, err = self.pipes[0]:write(string.format("%s:request:%d:%d:%d:%d:%d:%d:%s", identifier, flags, cell_width, width, cell_height, height, #data, data))
+    local code, err =
+        self.pipes[0]:write(string.format("%s:request:%d:%s:%d:%d:%d:%d:%d:%s",
+            identifier, flags, color, cell_width, width, cell_height, height, #data, data))
+
     self:_assert(not err, 'failed to request: ', err)
 end
 
@@ -218,7 +221,7 @@ function Processor:_init()
 
     self:_listen()
 
-    self:setForeground(config.foreground)
+    -- self:setForeground(config.foreground)
     self:setInternalScale(config.internal_scale)
     self:setDynamicScale(config.dynamic_scale)
 end

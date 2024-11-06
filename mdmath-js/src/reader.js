@@ -21,6 +21,10 @@ reader.listen = function(callback) {
                 // TODO: Flags should be a enum
                 const flags = await stream.readInt();
 
+                const color = (await stream.readString()).toLowerCase();
+                if (!color.match(/^#[0-9a-f]{6}$/))
+                    throw new Error(`Invalid color format: ${color}`);
+
                 const cellWidth = await stream.readInt();
                 const width = await stream.readInt();
 
@@ -38,18 +42,8 @@ reader.listen = function(callback) {
                     width,
                     height,
                     flags,
+                    color,
                     data
-                };
-                callback(response);
-            } else if(type == 'fgcolor') {
-                const color = (await stream.readString()).toLowerCase();
-                if (!color.match(/^#[0-9a-f]{6}$/))
-                    response_fail(`Invalid color: ${color}`);
-
-                const response = {
-                    identifier,
-                    type,
-                    color
                 };
                 callback(response);
             } else if(type == 'iscale' || type == 'dscale') {
