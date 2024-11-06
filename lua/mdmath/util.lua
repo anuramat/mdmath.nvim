@@ -1,3 +1,4 @@
+local vim = vim
 local nvim = require'mdmath.nvim'
 
 local M = {}
@@ -60,12 +61,10 @@ function M.err_message(...)
     local message = table.concat(vim.iter({ ... }):flatten():totable())
     if vim.in_fast_event() then
         vim.schedule(function()
-            nvim.err_writeln(message)
-            nvim.command('redraw')
+            vim.notify('mdmath.nvim: ' .. message, vim.log.levels.ERROR)
         end)
     else
-        nvim.err_writeln(message)
-        nvim.command('redraw')
+        vim.notify('mdmath.nvim: ' .. message, vim.log.levels.ERROR)
     end
 end
 
