@@ -33,14 +33,14 @@ local mt = {
         end
 
         if _opts == nil then
-            error 'mdmath.nvim has not been configured'
+            error "Attempt to access mdmath.nvim options before configuring it. (Make sure to call `require'mdmath'.setup()` before using any module)"
         end
 
         M.validate()
         return _opts
     end,
     __newindex = function()
-        error 'Attempt to modify read-only mdmath.nvim config'
+        error 'Attempt to modify read-only mdmath.nvim configuration.'
     end,
 }
 
@@ -49,7 +49,7 @@ function M.validate()
         return
     end
     if _opts == nil then
-        error "Attempt to validate mdmath.nvim before configuring it (see README for more information)"
+        error "Attempt to validate mdmath.nvim before configuring it."
     end
     local opts = _opts
 
@@ -66,7 +66,7 @@ function M.validate()
 
     setmetatable(opts, {
         __newindex = function()
-            error 'Attempt to modify read-only mdmath.nvim opts'
+            error 'Attempt to modify read-only mdmath.nvim options.'
         end,
     })
 
