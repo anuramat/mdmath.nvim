@@ -39,6 +39,13 @@ function Buffer:_init(bufnr)
             self:parse_view()
         end
     })
+    nvim.create_autocmd({'WinScrolled'}, {
+        buffer = bufnr,
+        group = augroup,
+        callback = function()
+            self:reset_timer()
+        end
+    })
 
     self:parse_view()
 end
