@@ -3,6 +3,7 @@ local util = require'mdmath.util'
 local ts = vim.treesitter
 local uv = vim.uv
 local Equation = require'mdmath.Equation'
+local config = require'mdmath.config'.opts
 
 local augroup = nvim.create_augroup('MdMathManager', {clear = true})
 
@@ -10,7 +11,6 @@ local M = {}
 local buffers = {}
 
 local Buffer = util.class 'Buffer'
-local INTERVAL = 1000
 
 -- FIX: Temporary workaround before NeoVim 0.12
 local function get_parser(bufnr, lang)
@@ -80,7 +80,7 @@ function Buffer:free()
 end
 
 function Buffer:reset_timer()
-    self.timer:start(INTERVAL, 0, vim.schedule_wrap(function()
+    self.timer:start(config.update_interval, 0, vim.schedule_wrap(function()
         return self:parse_view()
     end))
 end

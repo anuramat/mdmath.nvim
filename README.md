@@ -67,6 +67,8 @@ opts = {
     dynamic = true,
     -- Configure the scale of dynamic-rendered equations.
     dynamic_scale = 1.0,
+    -- Interval between updates (milliseconds).
+    update_interval = 400,
 
     -- Internal scale of the equation images, increase to prevent blurry images when increasing terminal
     -- font, high values may produce aliased images.
