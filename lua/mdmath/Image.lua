@@ -14,27 +14,36 @@ local function next_id()
     return id
 end
 
+local function tmux_escape(sequence)
+	return "\x1bPtmux;" .. sequence:gsub("\x1b", "\x1b\x1b") .. "\x1b\\"
+end
+
 local function kitty_send(params, payload)
-    if not params.q then
-        params.q = 2
-    end
+	if not params.q then
+		params.q = 2
+	end
 
-    local tbl = {}
+	local tbl = {}
 
-    for k, v in pairs(params) do
-        tbl[#tbl + 1] = tostring(k) .. '=' .. tostring(v)
-    end
+	for k, v in pairs(params) do
+		tbl[#tbl + 1] = tostring(k) .. "=" .. tostring(v)
+	end
 
-    params = table.concat(tbl, ',')
+	params = table.concat(tbl, ",")
 
-    local message
-    if payload ~= nil then
-        message = string.format('\x1b_G%s;%s\x1b\\', params, vim.base64.encode(payload))
-    else
-        message = string.format('\x1b_G%s\x1b\\', params)
-    end
+	local message
+	if payload ~= nil then
+		message = string.format("\x1b_G%s;%s\x1b\\", params, vim.base64.encode(payload))
+	else
+		message = string.format("\x1b_G%s\x1b\\", params)
+	end
 
-    stdout:write(message)
+	if os.getenv("TMUX") ~= "" then
+		local tmux_message = tmux_escape(message)
+		stdout:write(tmux_message)
+	else
+		stdout:write(message)
+	end
 end
 
 local Image = util.class 'Image'
