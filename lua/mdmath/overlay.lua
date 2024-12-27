@@ -47,6 +47,14 @@ function Buffer:_init(bufnr)
         end
     })
 
+    -- FIX: Is this the best way to handle this?
+    nvim.create_autocmd({'VimLeave'}, {
+        group = augroup,
+        callback = function()
+            self:free()
+        end
+    })
+
     self:parse_view()
 end
 
