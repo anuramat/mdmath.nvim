@@ -61,7 +61,7 @@ function Equation:_create(res, err)
             end
         end
 
-        for i = #texts + 1, nlines do 
+        for i = #texts + 1, nlines do
             local padding = self.lines_width[i]
             lines[i] = { (' '):rep(padding), self.lines[i]:len() }
         end
@@ -141,7 +141,7 @@ function Equation:_init(bufnr, row, col, text, opts)
     self.created = false
     self.valid = true
     self.color = color
-    
+
     -- remove trailing '$'
     self.equation = text:gsub('^%$*(.-)%$*$', '%1')
 

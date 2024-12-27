@@ -12,7 +12,7 @@ setmetatable(H, {
     __index = function(self, key)
         assert(is_integer(key), "key must be a number")
         assert(key >= 1 and key <= 0xFFFFFF, 'key must be in a 24-bit color range')
-        
+
         local name = HIGHLIGHT_NAME_PREFIX .. tostring(key)
         if key < 256 then
             api.nvim_command(string.format('highlight %s guifg=#%06X ctermfg=%d', name, key, key))

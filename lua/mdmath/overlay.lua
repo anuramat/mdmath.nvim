@@ -18,7 +18,7 @@ local function get_parser(bufnr, lang)
     if not parser then
         error('Parser not found for ' .. lang, 2)
     end
-    
+
     return parser
 end
 
@@ -78,7 +78,7 @@ function Buffer:free()
 
     self.timer:stop()
     self.timer:close()
-    
+
     self:clear(false)
 
     nvim.clear_autocmds {

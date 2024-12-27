@@ -27,7 +27,7 @@ function M.setup(opts)
             pattern = filetypes,
             callback = function()
                 local bufnr = api.nvim_get_current_buf()
-                
+
                 -- defer the function, since it's not needed for the UI
                 vim.defer_fn(function()
                     if api.nvim_buf_is_valid(bufnr) then

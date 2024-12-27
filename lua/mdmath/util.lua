@@ -77,7 +77,7 @@ function M.hl_as_hex(color)
         return color:lower()
     end
 
-    local foreground = nvim.get_hl(0, {name = color, create = false, link = false}).fg 
+    local foreground = nvim.get_hl(0, {name = color, create = false, link = false}).fg
     return string.format('#%06x', foreground)
 end
 

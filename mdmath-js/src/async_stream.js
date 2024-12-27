@@ -81,6 +81,6 @@ export function makeAsyncStream(stream, sep) {
         }
         return arrayToUTF8String(buffer);
     }
-    
+
     return M;
 }

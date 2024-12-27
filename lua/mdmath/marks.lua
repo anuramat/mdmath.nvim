@@ -38,7 +38,7 @@ function Mark:_init(bufnr, row, col, opts)
         self.lengths = { opts.text[2] }
     end
 
-    local row_end, col_end 
+    local row_end, col_end
     if self.num_lines > 1 then
         row_end = row + self.num_lines - 1
         col_end = self.lengths[self.num_lines]
@@ -148,7 +148,7 @@ function Buffer:show(show)
     --     for _, mark in pairs(self.marks) do
     --         mark:flush() -- flush visibility
     --     end
-    -- end 
+    -- end
 end
 
 function Buffer:clear()

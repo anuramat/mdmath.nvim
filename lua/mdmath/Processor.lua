@@ -93,7 +93,7 @@ end
 function Processor:_listen()
     local separator = string.byte(':')
 
-    -- TODO: use JSON instead of custom protocol 
+    -- TODO: use JSON instead of custom protocol
     local states = {
         READING_IDENTIFIER = 0,
         READING_TYPE = 1,
@@ -303,7 +303,7 @@ function M.stop_instance()
     for bufnr, _ in pairs(buffers) do
         if buffers[bufnr] then
             -- mark false to prevent on_detach from being called multiple times
-            buffers[bufnr] = false 
+            buffers[bufnr] = false
             detach(bufnr)
         end
     end

@@ -3,7 +3,7 @@ local default_opts = {
     filetypes = {'markdown'},
     -- Color of the equation, can be a highlight group or a hex color.
     -- Examples: 'Normal', '#ff0000'
-    foreground = 'Normal', 
+    foreground = 'Normal',
     -- Hide the text when the equation is under the cursor.
     anticonceal = true,
     -- Hide the text when in the Insert Mode.
@@ -46,7 +46,7 @@ local mt = {
     end,
 }
 
-function M.validate() 
+function M.validate()
     if M.validated then
         return
     end

@@ -135,7 +135,7 @@ function M.add(bufnr, row, col, row_end, col_end)
     if not buffer then
         return nil
     end
- 
+
     local offset = util.compute_offset(bufnr, row, col)
     if not offset then
         return nil

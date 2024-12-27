@@ -11,7 +11,7 @@ function M.size()
             error('Failed to get terminal size: code ' .. err)
         end
     end
-    
+
     return winsize
 end
 

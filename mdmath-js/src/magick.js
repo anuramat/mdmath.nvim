@@ -8,7 +8,7 @@ function isValid(value) {
 
 /**
  * Checks if a file exists.
- * 
+ *
  * @param {string} filename - The name of the file to check.
  * @returns {Promise<boolean>} A promise that resolves to true if the file exists, false otherwise.
  */
@@ -71,7 +71,7 @@ const magickBinary = new Promise(async (resolve) => {
 
 /**
  * Gets the dimensions of a PNG buffer.
- * 
+ *
  * @param {Buffer} png - The PNG buffer to measure.
  * @returns {Promise<{width: number, height: number}>} The dimensions of the PNG.
  */
@@ -104,7 +104,7 @@ export async function pngDimensions(png) {
 
 /**
  * Fits a PNG image to specified dimensions.
- * 
+ *
  * @param {Buffer} input - The input PNG buffer.
  * @param {string} output - The output filename.
  * @param {number} width - The target width.
@@ -138,7 +138,7 @@ export async function pngFitTo(input, output, width, height, {center}) {
 
 /**
  * Converts an SVG string to a PNG using rsvg-convert.
- * 
+ *
  * @param {string} svg - The SVG string to convert.
  * @param {Object} opts - Conversion options.
  * @param {number} [opts.width] - The target width.
