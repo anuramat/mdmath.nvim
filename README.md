@@ -58,7 +58,7 @@ opts = {
     filetypes = {'markdown'},
     -- Color of the equation, can be a highlight group or a hex color.
     -- Examples: 'Normal', '#ff0000'
-    foreground = 'Normal', 
+    foreground = 'Normal',
     -- Hide the text when the equation is under the cursor.
     anticonceal = true,
     -- Hide the text when in the Insert Mode.
@@ -85,6 +85,8 @@ Currently, it only supports rendering the image inline, features like rendering 
   - `:MdMath disable`: Disable the plugin for the current buffer
   - `:MdMath clear`: Refresh all equations
   - `:MdMath build`: Build the node.js server
+
+If you are using TMUX, remember to enable `allow-passthrough` in your `~/.tmux.conf`.
 
 ## Looking to the future!
 
