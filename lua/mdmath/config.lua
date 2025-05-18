@@ -20,6 +20,9 @@ local default_opts = {
     -- WARNING: This do not affect how the images are displayed, only how many pixels are used to render them.
     --          See `dynamic_scale` to modify the displayed size.
     internal_scale = 1.0,
+
+    -- Commands that will be prepended to each equation
+    preamble = "",
 }
 
 local _opts = nil
