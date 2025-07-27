@@ -263,7 +263,8 @@ local function opts2extmark(opts, row, col)
                 row = row + 1
                 is_last_virtual = false
             end
-            col = 0 -- reset col for next line
+            -- Keep column offset for subsequent lines in multiline equations
+            -- col = 0
         end
         return extmarks, true
     else
