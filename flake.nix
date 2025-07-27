@@ -66,10 +66,30 @@
             librsvg
           ];
         };
+
+        # Test Neovim with plugin pre-configured
+        testNvim = pkgs.neovim.override {
+          configure = {
+            customRC = ''
+              lua << EOF
+              require('mdmath').setup()
+            '';
+            packages.mdmath = {
+              start = [
+                plugin
+                (pkgs.vimPlugins.nvim-treesitter.withPlugins (p: [
+                  p.markdown
+                  p.markdown_inline
+                ]))
+              ];
+            };
+          };
+        };
       in
       {
         packages.default = plugin;
         packages.mdmath-nvim = plugin;
+        packages.test-nvim = testNvim;
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             nodejs
