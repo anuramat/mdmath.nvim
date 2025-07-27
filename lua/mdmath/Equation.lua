@@ -105,10 +105,6 @@ function Equation:_init(bufnr, row, col, text, opts)
 
     if text:find('\n') then
         local lines = vim.split(text, '\n')
-        -- Only support rectangular equations
-        if util.linewidth(bufnr, row) ~= lines[1]:len() or util.linewidth(bufnr, row + #lines - 1) ~= lines[#lines]:len() then
-            return false
-        end
 
         local width = 0
         local lines_width = {}
