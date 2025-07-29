@@ -72,7 +72,11 @@
           configure = {
             customRC = ''
               lua << EOF
-              require('mdmath').setup()
+              require('mdmath').setup({
+                preamble = function(filename)
+                  return vim.fn.system("collect '.preamble.tex' " .. filename)
+                end
+              })
             '';
             packages.mdmath = {
               start = [
